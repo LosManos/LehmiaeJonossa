@@ -45,6 +45,9 @@ public partial class MainWindowViewModel : ViewModelBase
     private string _authStatus = "Checking authentication...";
 
     [ObservableProperty]
+    private string? _accountIdentity;
+
+    [ObservableProperty]
     private bool _isConnected = false;
 
     [ObservableProperty]
@@ -126,21 +129,11 @@ public partial class MainWindowViewModel : ViewModelBase
     private async Task InitializeAsync()
     {
         IsBusy = true;
-        StatusMessage = "Loading settings...";
+        StatusMessage = "Loading settings & discovering Azure namespaces...";
 
         try
         {
             _settings = await _configService.LoadSettingsAsync();
-
-            Namespaces.Clear();
-            foreach (var ns in _settings.ConfiguredNamespaces)
-            {
-                Namespaces.Add(ns);
-            }
-
-            SelectedNamespace = Namespaces.Contains(_settings.SelectedNamespace)
-                ? _settings.SelectedNamespace
-                : Namespaces.FirstOrDefault() ?? "sb-production.servicebus.windows.net";
 
             SelectedTheme = _settings.Theme;
             _themeService.ApplyTheme(SelectedTheme);
@@ -156,13 +149,58 @@ public partial class MainWindowViewModel : ViewModelBase
                 _refreshTimer.Start();
             }
 
-            // Attempt initial connection or fallback to demo
-            await ConnectAndRefreshAsync();
+            // Populate configured namespaces (cleaning out old placeholder domains)
+            var cleanConfigured = _settings.ConfiguredNamespaces
+                .Where(n => !n.Equals("sb-production.servicebus.windows.net", StringComparison.OrdinalIgnoreCase) &&
+                            !n.Equals("sb-staging.servicebus.windows.net", StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            // Auto-discover live Azure Service Bus namespaces
+            var discovered = await _monitorService.DiscoverNamespacesAsync();
+            foreach (var ns in discovered)
+            {
+                if (!cleanConfigured.Contains(ns, StringComparer.OrdinalIgnoreCase))
+                {
+                    cleanConfigured.Add(ns);
+                }
+            }
+
+            Namespaces.Clear();
+            foreach (var ns in cleanConfigured)
+            {
+                Namespaces.Add(ns);
+            }
+
+            if (!string.IsNullOrWhiteSpace(_settings.SelectedNamespace) &&
+                Namespaces.Contains(_settings.SelectedNamespace) &&
+                !_settings.SelectedNamespace.Equals("sb-production.servicebus.windows.net", StringComparison.OrdinalIgnoreCase))
+            {
+                SelectedNamespace = _settings.SelectedNamespace;
+            }
+            else
+            {
+                SelectedNamespace = Namespaces.FirstOrDefault() ?? string.Empty;
+            }
+
+            _settings.ConfiguredNamespaces = Namespaces.ToList();
+            _settings.SelectedNamespace = SelectedNamespace;
+            _ = _configService.SaveSettingsAsync(_settings);
+
+            if (!string.IsNullOrWhiteSpace(SelectedNamespace))
+            {
+                await ConnectAndRefreshAsync();
+            }
+            else
+            {
+                _monitorService.SetDemoMode(true);
+                IsDemoMode = true;
+                AuthStatus = "No namespace configured (Demo Mode)";
+                await RefreshMetricsAsync();
+            }
         }
         catch (Exception ex)
         {
             StatusMessage = $"Init warning: {ex.Message}";
-            // Default to demo mode if Azure credentials aren't available locally
             _monitorService.SetDemoMode(true);
             IsDemoMode = true;
             await RefreshMetricsAsync();
@@ -178,6 +216,13 @@ public partial class MainWindowViewModel : ViewModelBase
         _themeService.ApplyTheme(value);
         _settings.Theme = value;
         _ = _configService.SaveSettingsAsync(_settings);
+    }
+
+    partial void OnSelectedAuthModeChanged(AuthMode value)
+    {
+        _settings.AuthMode = value;
+        _ = _configService.SaveSettingsAsync(_settings);
+        _ = ConnectAndRefreshAsync();
     }
 
     partial void OnSelectedNamespaceChanged(string value)
@@ -209,18 +254,65 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             await _monitorService.ConnectAsync(SelectedNamespace, SelectedAuthMode, UserAssignedClientId);
             AuthStatus = _monitorService.AuthStatusMessage;
+            AccountIdentity = _monitorService.CurrentAccountIdentity;
             IsConnected = _monitorService.IsConnected;
             IsDemoMode = _monitorService.IsDemoMode;
             await RefreshMetricsAsync();
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Connection failed: {ex.Message}. Falling back to Demo Mode.";
-            AuthStatus = "Azure auth failed (using Demo mode)";
-            _monitorService.SetDemoMode(true);
-            IsDemoMode = true;
+            StatusMessage = $"Connection failed: {ex.Message}";
+            AuthStatus = $"Connection error: {ex.Message}";
             IsConnected = false;
-            await RefreshMetricsAsync();
+            _rawEntities.Clear();
+            FilteredEntities.Clear();
+            HotlistEntities.Clear();
+            TotalDeadLetterCount = 0;
+            TotalActiveMessagesCount = 0;
+            EntitiesRequiringAttentionCount = 0;
+            HealthyEntitiesCount = 0;
+            HasDeadLettersDetected = false;
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    [RelayCommand]
+    public async Task DiscoverNamespacesAsync()
+    {
+        IsBusy = true;
+        StatusMessage = "Discovering Azure Service Bus namespaces...";
+
+        try
+        {
+            var discovered = await _monitorService.DiscoverNamespacesAsync();
+            int addedCount = 0;
+            foreach (var ns in discovered)
+            {
+                if (!Namespaces.Contains(ns, StringComparer.OrdinalIgnoreCase))
+                {
+                    Namespaces.Add(ns);
+                    addedCount++;
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(SelectedNamespace) && Namespaces.Any())
+            {
+                SelectedNamespace = Namespaces.First();
+            }
+
+            _settings.ConfiguredNamespaces = Namespaces.ToList();
+            await _configService.SaveSettingsAsync(_settings);
+
+            StatusMessage = addedCount > 0
+                ? $"Discovered and added {addedCount} Azure namespace(s)."
+                : $"Discovered {discovered.Count} namespace(s) (all already present).";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Discovery failed: {ex.Message}";
         }
         finally
         {
@@ -316,7 +408,15 @@ public partial class MainWindowViewModel : ViewModelBase
         IsDemoMode = !IsDemoMode;
         _monitorService.SetDemoMode(IsDemoMode);
         AuthStatus = _monitorService.AuthStatusMessage;
-        _ = RefreshMetricsAsync();
+        AccountIdentity = _monitorService.CurrentAccountIdentity;
+        if (!IsDemoMode && !string.IsNullOrWhiteSpace(SelectedNamespace))
+        {
+            _ = ConnectAndRefreshAsync();
+        }
+        else
+        {
+            _ = RefreshMetricsAsync();
+        }
     }
 
     [RelayCommand]

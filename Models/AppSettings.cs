@@ -11,13 +11,8 @@ public enum AuthMode
 
 public class AppSettings
 {
-    public List<string> ConfiguredNamespaces { get; set; } = new()
-    {
-        "sb-production.servicebus.windows.net",
-        "sb-staging.servicebus.windows.net"
-    };
-
-    public string SelectedNamespace { get; set; } = "sb-production.servicebus.windows.net";
+    public List<string> ConfiguredNamespaces { get; set; } = new();
+    public string SelectedNamespace { get; set; } = string.Empty;
     public AppTheme Theme { get; set; } = AppTheme.Light;
     public AuthMode AuthMode { get; set; } = AuthMode.DefaultAzureCredential;
     public string? UserAssignedClientId { get; set; }

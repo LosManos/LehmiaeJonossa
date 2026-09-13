@@ -123,4 +123,25 @@ public class MonitorTests
         Assert.Contains(AppTheme.Lego, themes);
         Assert.Contains(AppTheme.Barbie, themes);
     }
+
+    [Fact]
+    public void AuthModes_AllThreeModesAreAvailable()
+    {
+        var modes = Enum.GetValues<AuthMode>();
+        Assert.Contains(AuthMode.DefaultAzureCredential, modes);
+        Assert.Contains(AuthMode.SystemAssignedManagedIdentity, modes);
+        Assert.Contains(AuthMode.UserAssignedManagedIdentity, modes);
+    }
+
+    [Fact]
+    public async Task ServiceBusMonitorService_DemoMode_SetsAccountIdentity()
+    {
+        var service = new AzureServiceBusMonitorService();
+        service.SetDemoMode(true);
+        Assert.Equal("Mock Environment", service.CurrentAccountIdentity);
+        Assert.Equal("Demo Mode (Mock Service Bus)", service.AuthStatusMessage);
+
+        var namespaces = await service.DiscoverNamespacesAsync();
+        Assert.NotNull(namespaces);
+    }
 }

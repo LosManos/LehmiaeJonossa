@@ -20,6 +20,7 @@ public class AzureServiceBusMonitorService : IServiceBusMonitorService, IAsyncDi
     public bool IsConnected => _adminClient != null && !IsDemoMode;
     public string? CurrentNamespace { get; private set; }
     public string AuthStatusMessage { get; private set; } = "Not connected";
+    public string? CurrentAccountIdentity { get; private set; }
     public bool IsDemoMode { get; private set; } = false;
 
     public void SetDemoMode(bool enabled)
@@ -29,11 +30,17 @@ public class AzureServiceBusMonitorService : IServiceBusMonitorService, IAsyncDi
         {
             CurrentNamespace = "sb-demo-environment.servicebus.windows.net";
             AuthStatusMessage = "Demo Mode (Mock Service Bus)";
+            CurrentAccountIdentity = "Mock Environment";
         }
         else
         {
-            AuthStatusMessage = _adminClient != null ? "Connected" : "Not connected";
+            AuthStatusMessage = _adminClient != null ? $"Connected: {CurrentAccountIdentity ?? "Azure"}" : "Not connected";
         }
+    }
+
+    public async Task<IReadOnlyList<string>> DiscoverNamespacesAsync(CancellationToken ct = default)
+    {
+        return await AzureCliHelper.ListServiceBusNamespacesAsync(ct);
     }
 
     public async Task ConnectAsync(string namespaceOrEndpoint, AuthMode authMode, string? clientId = null, CancellationToken ct = default)
@@ -45,10 +52,7 @@ public class AzureServiceBusMonitorService : IServiceBusMonitorService, IAsyncDi
         {
             AuthMode.SystemAssignedManagedIdentity => new ManagedIdentityCredential(ManagedIdentityId.SystemAssigned),
             AuthMode.UserAssignedManagedIdentity when !string.IsNullOrWhiteSpace(clientId) => new ManagedIdentityCredential(ManagedIdentityId.FromUserAssignedClientId(clientId)),
-            _ => new DefaultAzureCredential(new DefaultAzureCredentialOptions
-            {
-                Diagnostics = { IsLoggingEnabled = true }
-            })
+            _ => CreateDefaultCredential()
         };
 
         try
@@ -58,14 +62,28 @@ public class AzureServiceBusMonitorService : IServiceBusMonitorService, IAsyncDi
             CurrentNamespace = fqdn;
             IsDemoMode = false;
 
-            var authDescription = authMode switch
+            if (authMode == AuthMode.SystemAssignedManagedIdentity)
             {
-                AuthMode.SystemAssignedManagedIdentity => "System Managed Identity",
-                AuthMode.UserAssignedManagedIdentity => $"User Managed Identity ({clientId})",
-                _ => "Default Azure Credential (Managed Identity / Azure CLI)"
-            };
+                CurrentAccountIdentity = "System Managed Identity";
+            }
+            else if (authMode == AuthMode.UserAssignedManagedIdentity)
+            {
+                CurrentAccountIdentity = $"User Managed Identity ({clientId})";
+            }
+            else
+            {
+                var cliAccount = await AzureCliHelper.GetCurrentAccountAsync(ct);
+                if (cliAccount != null && !string.IsNullOrWhiteSpace(cliAccount.User))
+                {
+                    CurrentAccountIdentity = $"{cliAccount.User} (Azure CLI)";
+                }
+                else
+                {
+                    CurrentAccountIdentity = "Default Azure Credential";
+                }
+            }
 
-            AuthStatusMessage = $"Connected via {authDescription}";
+            AuthStatusMessage = $"Connected: {CurrentAccountIdentity}";
             await Task.CompletedTask;
         }
         catch (Exception ex)
@@ -73,6 +91,33 @@ public class AzureServiceBusMonitorService : IServiceBusMonitorService, IAsyncDi
             AuthStatusMessage = $"Connection failed: {ex.Message}";
             throw;
         }
+    }
+
+    private static TokenCredential CreateDefaultCredential()
+    {
+        // On developer workstations (macOS / Windows), DefaultAzureCredential's IMDS probe (169.254.169.254)
+        // fails with socket errors after 6 retries (~30s delay) before reaching AzureCliCredential.
+        // We prioritize local developer tools (Azure CLI, Azure Developer CLI, PowerShell, Visual Studio)
+        // and fall back safely to DefaultAzureCredential with ExcludeManagedIdentityCredential set when not on Azure.
+        var isAzureEnv = IsRunningInAzureEnvironment();
+        return new ChainedTokenCredential(
+            new AzureCliCredential(),
+            new AzureDeveloperCliCredential(),
+            new AzurePowerShellCredential(),
+            new VisualStudioCredential(),
+            new DefaultAzureCredential(new DefaultAzureCredentialOptions
+            {
+                ExcludeManagedIdentityCredential = !isAzureEnv,
+                Diagnostics = { IsLoggingEnabled = true }
+            })
+        );
+    }
+
+    private static bool IsRunningInAzureEnvironment()
+    {
+        return !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("IDENTITY_ENDPOINT")) ||
+               !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("MSI_ENDPOINT")) ||
+               !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("WEBSITE_INSTANCE_ID"));
     }
 
     public async Task<IReadOnlyList<ServiceBusEntityMetric>> GetEntityMetricsAsync(CancellationToken ct = default)

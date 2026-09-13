@@ -83,7 +83,7 @@
                 </StackPanel>
 
                 <!-- Namespace Selector & Auth Status -->
-                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12" Margin="32,0,0,0" VerticalAlignment="Center">
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" Margin="20,0,0,0" VerticalAlignment="Center">
                     <TextBlock Text="Namespace:" 
                                VerticalAlignment="Center" 
                                FontSize="13" 
@@ -92,16 +92,35 @@
 
                     <ComboBox ItemsSource="{Binding Namespaces}" 
                               SelectedItem="{Binding SelectedNamespace}"
-                              Width="300"
+                              Width="260"
                               Height="34"
                               CornerRadius="6"/>
 
                     <Button Content="+" 
                             Command="{Binding ShowAddNamespaceCommand}" 
                             ToolTip.Tip="Add new namespace"
-                            Padding="10,4"
+                            Padding="8,4"
                             CornerRadius="6"
                             FontWeight="Bold"/>
+
+                    <Button Content="↻" 
+                            Command="{Binding DiscoverNamespacesCommand}" 
+                            ToolTip.Tip="Auto-discover Service Bus namespaces from your Azure account"
+                            Padding="8,4"
+                            CornerRadius="6"
+                            FontWeight="Bold"/>
+
+                    <TextBlock Text="Auth:" 
+                               VerticalAlignment="Center" 
+                               FontSize="12" 
+                               FontWeight="SemiBold" 
+                               Foreground="{DynamicResource ThemeTextSecondaryBrush}"/>
+
+                    <ComboBox ItemsSource="{Binding AvailableAuthModes}" 
+                              SelectedItem="{Binding SelectedAuthMode}"
+                              Width="175"
+                              Height="34"
+                              CornerRadius="6"/>
 
                     <!-- Auth Badge -->
                     <Border Background="{DynamicResource ThemeSuccessGreenBackgroundBrush}" 
@@ -109,14 +128,17 @@
                             BorderThickness="1" 
                             CornerRadius="16" 
                             Padding="10,4" 
-                            VerticalAlignment="Center">
+                            VerticalAlignment="Center"
+                            ToolTip.Tip="{Binding AuthStatus}">
                         <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
                             <TextBlock Text="🛡️" FontSize="11" VerticalAlignment="Center"/>
                             <TextBlock Text="{Binding AuthStatus}" 
                                        FontSize="12" 
                                        FontWeight="SemiBold" 
                                        Foreground="{DynamicResource ThemeSuccessGreenBrush}" 
-                                       VerticalAlignment="Center"/>
+                                       VerticalAlignment="Center"
+                                       MaxWidth="240"
+                                       TextTrimming="CharacterEllipsis"/>
                         </StackPanel>
                     </Border>
 
