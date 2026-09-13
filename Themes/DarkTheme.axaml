@@ -1,0 +1,44 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- Dark Theme Palette -->
+    <SolidColorBrush x:Key="ThemeBackgroundBrush" Color="#0F172A" />
+    <SolidColorBrush x:Key="ThemeHeaderBackgroundBrush" Color="#1E293B" />
+    <SolidColorBrush x:Key="ThemeCardBackgroundBrush" Color="#1E293B" />
+    <SolidColorBrush x:Key="ThemeCardBorderBrush" Color="#334155" />
+    <Thickness x:Key="ThemeCardBorderThickness">1</Thickness>
+    <CornerRadius x:Key="ThemeCardCornerRadius">10</CornerRadius>
+    
+    <SolidColorBrush x:Key="ThemeTextPrimaryBrush" Color="#F8FAFC" />
+    <SolidColorBrush x:Key="ThemeTextSecondaryBrush" Color="#94A3B8" />
+    <SolidColorBrush x:Key="ThemeTextMutedBrush" Color="#64748B" />
+    
+    <!-- Dead Letter Alert (Red) -->
+    <SolidColorBrush x:Key="ThemeAlertRedBrush" Color="#EF4444" />
+    <SolidColorBrush x:Key="ThemeAlertRedBackgroundBrush" Color="#450A0A" />
+    <SolidColorBrush x:Key="ThemeAlertRedBorderBrush" Color="#991B1B" />
+
+    <!-- Warning (Amber) -->
+    <SolidColorBrush x:Key="ThemeWarningAmberBrush" Color="#F59E0B" />
+    <SolidColorBrush x:Key="ThemeWarningAmberBackgroundBrush" Color="#451A03" />
+    <SolidColorBrush x:Key="ThemeWarningAmberBorderBrush" Color="#92400E" />
+
+    <!-- Success / Healthy (Green) -->
+    <SolidColorBrush x:Key="ThemeSuccessGreenBrush" Color="#10B981" />
+    <SolidColorBrush x:Key="ThemeSuccessGreenBackgroundBrush" Color="#022C22" />
+    <SolidColorBrush x:Key="ThemeSuccessGreenBorderBrush" Color="#065F46" />
+
+    <!-- Accent (Cyan/Blue) -->
+    <SolidColorBrush x:Key="ThemeAccentBrush" Color="#38BDF8" />
+    <SolidColorBrush x:Key="ThemeAccentForegroundBrush" Color="#0F172A" />
+    <SolidColorBrush x:Key="ThemeAccentHoverBrush" Color="#0EA5E9" />
+
+    <!-- Grid styling -->
+    <SolidColorBrush x:Key="ThemeDataGridHeaderBackgroundBrush" Color="#1E293B" />
+    <SolidColorBrush x:Key="ThemeDataGridRowHoverBrush" Color="#283548" />
+    <SolidColorBrush x:Key="ThemeInputBackgroundBrush" Color="#0F172A" />
+    <SolidColorBrush x:Key="ThemeInputBorderBrush" Color="#334155" />
+
+    <!-- Header Accent / Studs: None for Dark -->
+    <SolidColorBrush x:Key="ThemeCardHeaderAccentBrush" Color="Transparent" />
+    <x:Double x:Key="ThemeCardHeaderAccentHeight">0</x:Double>
+</ResourceDictionary>

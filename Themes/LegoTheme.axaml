@@ -1,0 +1,64 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- Lego-Inspired Primary Palette -->
+    <SolidColorBrush x:Key="ThemeBackgroundBrush" Color="#0055BF" />
+    <SolidColorBrush x:Key="ThemeHeaderBackgroundBrush" Color="#FFD500" />
+    <SolidColorBrush x:Key="ThemeCardBackgroundBrush" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="ThemeCardBorderBrush" Color="#003B82" />
+    <Thickness x:Key="ThemeCardBorderThickness">2</Thickness>
+    <CornerRadius x:Key="ThemeCardCornerRadius">4</CornerRadius>
+    
+    <SolidColorBrush x:Key="ThemeTextPrimaryBrush" Color="#000000" />
+    <SolidColorBrush x:Key="ThemeTextSecondaryBrush" Color="#1E293B" />
+    <SolidColorBrush x:Key="ThemeTextMutedBrush" Color="#64748B" />
+    
+    <!-- Dead Letter Alert (Lego Red) -->
+    <SolidColorBrush x:Key="ThemeAlertRedBrush" Color="#E3000B" />
+    <SolidColorBrush x:Key="ThemeAlertRedBackgroundBrush" Color="#FFEBEB" />
+    <SolidColorBrush x:Key="ThemeAlertRedBorderBrush" Color="#E3000B" />
+
+    <!-- Warning (Lego Orange) -->
+    <SolidColorBrush x:Key="ThemeWarningAmberBrush" Color="#FF8C00" />
+    <SolidColorBrush x:Key="ThemeWarningAmberBackgroundBrush" Color="#FFF3E0" />
+    <SolidColorBrush x:Key="ThemeWarningAmberBorderBrush" Color="#FF8C00" />
+
+    <!-- Success / Healthy (Lego Green) -->
+    <SolidColorBrush x:Key="ThemeSuccessGreenBrush" Color="#00852B" />
+    <SolidColorBrush x:Key="ThemeSuccessGreenBackgroundBrush" Color="#E8F5E9" />
+    <SolidColorBrush x:Key="ThemeSuccessGreenBorderBrush" Color="#00852B" />
+
+    <!-- Accent (Lego Red / Primary Action) -->
+    <SolidColorBrush x:Key="ThemeAccentBrush" Color="#E3000B" />
+    <SolidColorBrush x:Key="ThemeAccentForegroundBrush" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="ThemeAccentHoverBrush" Color="#B80009" />
+
+    <!-- Grid styling -->
+    <SolidColorBrush x:Key="ThemeDataGridHeaderBackgroundBrush" Color="#FFD500" />
+    <SolidColorBrush x:Key="ThemeDataGridRowHoverBrush" Color="#E0F2FE" />
+    <SolidColorBrush x:Key="ThemeInputBackgroundBrush" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="ThemeInputBorderBrush" Color="#003B82" />
+
+    <!-- Studs Brick Texture on Card Headers -->
+    <DrawingBrush x:Key="ThemeCardHeaderAccentBrush" TileMode="Tile" DestinationRect="0,0,16,10">
+        <DrawingBrush.Drawing>
+            <DrawingGroup>
+                <GeometryDrawing Brush="#E2E8F0">
+                    <GeometryDrawing.Geometry>
+                        <RectangleGeometry Rect="0,0,16,10" />
+                    </GeometryDrawing.Geometry>
+                </GeometryDrawing>
+                <GeometryDrawing Brush="#CBD5E1">
+                    <GeometryDrawing.Geometry>
+                        <EllipseGeometry Center="8,5" RadiusX="4" RadiusY="3" />
+                    </GeometryDrawing.Geometry>
+                </GeometryDrawing>
+                <GeometryDrawing Brush="#FFFFFF">
+                    <GeometryDrawing.Geometry>
+                        <EllipseGeometry Center="7.5,4.5" RadiusX="2.5" RadiusY="2" />
+                    </GeometryDrawing.Geometry>
+                </GeometryDrawing>
+            </DrawingGroup>
+        </DrawingBrush.Drawing>
+    </DrawingBrush>
+    <x:Double x:Key="ThemeCardHeaderAccentHeight">10</x:Double>
+</ResourceDictionary>

@@ -1,0 +1,796 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:AzureDeadLetterMonitor.ViewModels"
+        xmlns:models="using:AzureDeadLetterMonitor.Models"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="850"
+        x:Class="AzureDeadLetterMonitor.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        x:Name="RootWindow"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="Azure Dead Letter Monitor"
+        Width="1280" Height="860"
+        MinWidth="960" MinHeight="650"
+        Background="{DynamicResource ThemeBackgroundBrush}">
+
+    <Window.Styles>
+        <!-- Common Style Rules -->
+        <Style Selector="TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource ThemeTextPrimaryBrush}"/>
+        </Style>
+
+        <Style Selector="Border.Card">
+            <Setter Property="Background" Value="{DynamicResource ThemeCardBackgroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ThemeCardBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="{DynamicResource ThemeCardBorderThickness}"/>
+            <Setter Property="CornerRadius" Value="{DynamicResource ThemeCardCornerRadius}"/>
+            <Setter Property="BoxShadow" Value="0 2 8 0 #15000000"/>
+        </Style>
+
+        <Style Selector="Button.ActionPrimary">
+            <Setter Property="Background" Value="{DynamicResource ThemeAccentBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource ThemeAccentForegroundBrush}"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="14,8"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+
+        <Style Selector="Button.Inspect">
+            <Setter Property="Background" Value="{DynamicResource ThemeAlertRedBrush}"/>
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+
+        <Style Selector="Button.Inspect:pointerover">
+            <Setter Property="Opacity" Value="0.9"/>
+        </Style>
+    </Window.Styles>
+
+    <Grid RowDefinitions="Auto,*" Margin="0">
+        <!-- TOP NAVIGATION HEADER -->
+        <Border Grid.Row="0" 
+                Background="{DynamicResource ThemeHeaderBackgroundBrush}" 
+                BorderBrush="{DynamicResource ThemeCardBorderBrush}" 
+                BorderThickness="0,0,0,1" 
+                Padding="24,14">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <!-- App Title -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                    <Border Width="32" Height="32" 
+                            Background="{DynamicResource ThemeAccentBrush}" 
+                            CornerRadius="8" 
+                            VerticalAlignment="Center">
+                        <TextBlock Text="⚡" 
+                                   Foreground="{DynamicResource ThemeAccentForegroundBrush}" 
+                                   FontSize="18" 
+                                   HorizontalAlignment="Center" 
+                                   VerticalAlignment="Center"/>
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Azure Dead Letter Monitor" 
+                                   FontSize="18" 
+                                   FontWeight="Bold" 
+                                   Foreground="{DynamicResource ThemeTextPrimaryBrush}"/>
+                        <TextBlock Text="Azure Service Bus Diagnostic Dashboard" 
+                                   FontSize="11" 
+                                   Foreground="{DynamicResource ThemeTextMutedBrush}"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Namespace Selector & Auth Status -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12" Margin="32,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Text="Namespace:" 
+                               VerticalAlignment="Center" 
+                               FontSize="13" 
+                               FontWeight="SemiBold" 
+                               Foreground="{DynamicResource ThemeTextSecondaryBrush}"/>
+
+                    <ComboBox ItemsSource="{Binding Namespaces}" 
+                              SelectedItem="{Binding SelectedNamespace}"
+                              Width="300"
+                              Height="34"
+                              CornerRadius="6"/>
+
+                    <Button Content="+" 
+                            Command="{Binding ShowAddNamespaceCommand}" 
+                            ToolTip.Tip="Add new namespace"
+                            Padding="10,4"
+                            CornerRadius="6"
+                            FontWeight="Bold"/>
+
+                    <!-- Auth Badge -->
+                    <Border Background="{DynamicResource ThemeSuccessGreenBackgroundBrush}" 
+                            BorderBrush="{DynamicResource ThemeSuccessGreenBorderBrush}" 
+                            BorderThickness="1" 
+                            CornerRadius="16" 
+                            Padding="10,4" 
+                            VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            <TextBlock Text="🛡️" FontSize="11" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding AuthStatus}" 
+                                       FontSize="12" 
+                                       FontWeight="SemiBold" 
+                                       Foreground="{DynamicResource ThemeSuccessGreenBrush}" 
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Demo Mode Toggle -->
+                    <Button Content="{Binding IsDemoMode, Converter={x:Null}, StringFormat='Demo: {0}'}" 
+                            Command="{Binding ToggleDemoModeCommand}"
+                            ToolTip.Tip="Toggle between Live Azure and Offline Mock Data"
+                            Padding="10,4"
+                            CornerRadius="6"
+                            FontSize="11"
+                            VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- Controls: Theme Selector, Timer, Refresh -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="14" VerticalAlignment="Center">
+                    <!-- Theme Selector -->
+                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                        <TextBlock Text="Theme:" 
+                                   VerticalAlignment="Center" 
+                                   FontSize="12" 
+                                   FontWeight="Medium" 
+                                   Foreground="{DynamicResource ThemeTextSecondaryBrush}"/>
+                        <ComboBox ItemsSource="{Binding AvailableThemes}" 
+                                  SelectedItem="{Binding SelectedTheme}"
+                                  Width="105"
+                                  Height="34"
+                                  CornerRadius="6"/>
+                    </StackPanel>
+
+                    <!-- Auto-refresh pill -->
+                    <Button Command="{Binding ToggleAutoRefreshCommand}"
+                            Background="Transparent"
+                            BorderBrush="{DynamicResource ThemeCardBorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="6"
+                            Padding="10,6"
+                            ToolTip.Tip="Click to Pause / Resume auto refresh">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <TextBlock Text="⏱️" FontSize="11"/>
+                            <TextBlock Text="{Binding AutoRefreshCountdownText}" 
+                                       FontSize="12" 
+                                       FontWeight="SemiBold" 
+                                       Foreground="{DynamicResource ThemeTextSecondaryBrush}"/>
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Refresh Button -->
+                    <Button Classes="ActionPrimary" 
+                            Command="{Binding RefreshCommand}"
+                            IsEnabled="{Binding !IsBusy}">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <TextBlock Text="🔄" Foreground="{DynamicResource ThemeAccentForegroundBrush}"/>
+                            <TextBlock Text="Refresh" Foreground="{DynamicResource ThemeAccentForegroundBrush}"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ADD NAMESPACE INLINE POPUP/BAR -->
+        <Border Grid.Row="0" 
+                IsVisible="{Binding IsAddingNamespace}"
+                Background="{DynamicResource ThemeHeaderBackgroundBrush}"
+                BorderBrush="{DynamicResource ThemeAccentBrush}"
+                BorderThickness="0,0,0,2"
+                Padding="24,12"
+                ZIndex="10">
+            <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Center">
+                <TextBlock Text="Add Service Bus Namespace:" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                <TextBox Text="{Binding NewNamespaceInput}" 
+                         Watermark="e.g. my-servicebus.servicebus.windows.net" 
+                         Width="380"
+                         Height="34"/>
+                <Button Content="Save" 
+                        Classes="ActionPrimary"
+                        Command="{Binding ConfirmAddNamespaceCommand}"/>
+                <Button Content="Cancel" 
+                        Command="{Binding CancelAddNamespaceCommand}"/>
+            </StackPanel>
+        </Border>
+
+        <!-- MAIN CONTENT AREA -->
+        <ScrollViewer Grid.Row="1" Padding="24,20">
+            <StackPanel Spacing="22">
+                <!-- HERO KPI CARDS -->
+                <Grid ColumnDefinitions="*,*,*,*">
+                    <!-- KPI 1: DEAD LETTERS DETECTED -->
+                    <Border Grid.Column="0" Margin="0,0,10,0" 
+                            Classes="Card"
+                            Background="{DynamicResource ThemeAlertRedBackgroundBrush}"
+                            BorderBrush="{DynamicResource ThemeAlertRedBorderBrush}"
+                            BorderThickness="2"
+                            Padding="20,16">
+                        <StackPanel Spacing="8">
+                            <!-- Lego stud decoration if active -->
+                            <Rectangle Height="{DynamicResource ThemeCardHeaderAccentHeight}" 
+                                       Fill="{DynamicResource ThemeCardHeaderAccentBrush}" 
+                                       Margin="-20,-16,-20,6"/>
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Grid.Column="0" 
+                                           Text="{Binding TotalDeadLetterCount, StringFormat='{}{0:N0}'}" 
+                                           FontSize="32" 
+                                           FontWeight="ExtraBold" 
+                                           Foreground="{DynamicResource ThemeAlertRedBrush}"/>
+                                <TextBlock Grid.Column="1" 
+                                           Text="🚨" 
+                                           FontSize="26" 
+                                           VerticalAlignment="Top"/>
+                            </Grid>
+                            <TextBlock Text="Dead Letters Detected" 
+                                       FontSize="14" 
+                                       FontWeight="Bold" 
+                                       Foreground="{DynamicResource ThemeAlertRedBrush}"/>
+                            <TextBlock Text="Total dead-lettered messages across all queues and topics" 
+                                       FontSize="11" 
+                                       Foreground="{DynamicResource ThemeTextSecondaryBrush}" 
+                                       TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- KPI 2: ENTITIES REQUIRING ATTENTION -->
+                    <Border Grid.Column="1" Margin="5,0,5,0" 
+                            Classes="Card"
+                            Background="{DynamicResource ThemeWarningAmberBackgroundBrush}"
+                            BorderBrush="{DynamicResource ThemeWarningAmberBorderBrush}"
+                            Padding="20,16">
+                        <StackPanel Spacing="8">
+                            <Rectangle Height="{DynamicResource ThemeCardHeaderAccentHeight}" 
+                                       Fill="{DynamicResource ThemeCardHeaderAccentBrush}" 
+                                       Margin="-20,-16,-20,6"/>
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Grid.Column="0" 
+                                           Text="{Binding EntitiesRequiringAttentionCount}" 
+                                           FontSize="32" 
+                                           FontWeight="ExtraBold" 
+                                           Foreground="{DynamicResource ThemeWarningAmberBrush}"/>
+                                <TextBlock Grid.Column="1" 
+                                           Text="⚠️" 
+                                           FontSize="24" 
+                                           VerticalAlignment="Top"/>
+                            </Grid>
+                            <TextBlock Text="Entities in Alert" 
+                                       FontSize="14" 
+                                       FontWeight="Bold" 
+                                       Foreground="{DynamicResource ThemeWarningAmberBrush}"/>
+                            <TextBlock Text="Queues and subscriptions with dead letters (> 0)" 
+                                       FontSize="11" 
+                                       Foreground="{DynamicResource ThemeTextSecondaryBrush}" 
+                                       TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- KPI 3: HEALTHY ENTITIES -->
+                    <Border Grid.Column="2" Margin="5,0,5,0" 
+                            Classes="Card"
+                            Background="{DynamicResource ThemeSuccessGreenBackgroundBrush}"
+                            BorderBrush="{DynamicResource ThemeSuccessGreenBorderBrush}"
+                            Padding="20,16">
+                        <StackPanel Spacing="8">
+                            <Rectangle Height="{DynamicResource ThemeCardHeaderAccentHeight}" 
+                                       Fill="{DynamicResource ThemeCardHeaderAccentBrush}" 
+                                       Margin="-20,-16,-20,6"/>
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Grid.Column="0" 
+                                           Text="{Binding HealthyEntitiesCount}" 
+                                           FontSize="32" 
+                                           FontWeight="ExtraBold" 
+                                           Foreground="{DynamicResource ThemeSuccessGreenBrush}"/>
+                                <TextBlock Grid.Column="1" 
+                                           Text="✅" 
+                                           FontSize="24" 
+                                           VerticalAlignment="Top"/>
+                            </Grid>
+                            <TextBlock Text="Healthy Entities" 
+                                       FontSize="14" 
+                                       FontWeight="Bold" 
+                                       Foreground="{DynamicResource ThemeSuccessGreenBrush}"/>
+                            <TextBlock Text="Queues and subscriptions with zero dead letters" 
+                                       FontSize="11" 
+                                       Foreground="{DynamicResource ThemeTextSecondaryBrush}" 
+                                       TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- KPI 4: TOTAL IN-FLIGHT MESSAGES -->
+                    <Border Grid.Column="3" Margin="10,0,0,0" 
+                            Classes="Card"
+                            Padding="20,16">
+                        <StackPanel Spacing="8">
+                            <Rectangle Height="{DynamicResource ThemeCardHeaderAccentHeight}" 
+                                       Fill="{DynamicResource ThemeCardHeaderAccentBrush}" 
+                                       Margin="-20,-16,-20,6"/>
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Grid.Column="0" 
+                                           Text="{Binding TotalActiveMessagesCount, StringFormat='{}{0:N0}'}" 
+                                           FontSize="32" 
+                                           FontWeight="ExtraBold" 
+                                           Foreground="{DynamicResource ThemeTextPrimaryBrush}"/>
+                                <TextBlock Grid.Column="1" 
+                                           Text="📨" 
+                                           FontSize="24" 
+                                           VerticalAlignment="Top"/>
+                            </Grid>
+                            <TextBlock Text="Total Active Messages" 
+                                       FontSize="14" 
+                                       FontWeight="Bold" 
+                                       Foreground="{DynamicResource ThemeTextPrimaryBrush}"/>
+                            <TextBlock Text="Live in-flight messages processing normally" 
+                                       FontSize="11" 
+                                       Foreground="{DynamicResource ThemeTextSecondaryBrush}" 
+                                       TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <!-- "NEEDS IMMEDIATE ATTENTION" HOTLIST -->
+                <Border Classes="Card" 
+                        Background="{DynamicResource ThemeCardBackgroundBrush}"
+                        BorderBrush="{DynamicResource ThemeAlertRedBorderBrush}"
+                        BorderThickness="2"
+                        Padding="22">
+                    <StackPanel Spacing="16">
+                        <!-- Stud accent row -->
+                        <Rectangle Height="{DynamicResource ThemeCardHeaderAccentHeight}" 
+                                   Fill="{DynamicResource ThemeCardHeaderAccentBrush}" 
+                                   Margin="-22,-22,-22,4"/>
+
+                        <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10">
+                                <Border Background="{DynamicResource ThemeAlertRedBrush}" 
+                                        Width="26" Height="26" 
+                                        CornerRadius="13" 
+                                        VerticalAlignment="Center">
+                                    <TextBlock Text="!" 
+                                               Foreground="#FFFFFF" 
+                                               FontWeight="ExtraBold" 
+                                               HorizontalAlignment="Center" 
+                                               VerticalAlignment="Center"/>
+                                </Border>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="Needs Immediate Attention" 
+                                               FontSize="16" 
+                                               FontWeight="Bold" 
+                                               Foreground="{DynamicResource ThemeAlertRedBrush}"/>
+                                    <TextBlock Text="The following queues and topic subscriptions contain dead-lettered messages:" 
+                                               FontSize="12" 
+                                               Foreground="{DynamicResource ThemeTextSecondaryBrush}"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <Border Grid.Column="1" 
+                                    Background="{DynamicResource ThemeAlertRedBackgroundBrush}" 
+                                    BorderBrush="{DynamicResource ThemeAlertRedBorderBrush}" 
+                                    BorderThickness="1" 
+                                    CornerRadius="12" 
+                                    Padding="10,4">
+                                <TextBlock Text="{Binding EntitiesRequiringAttentionCount, StringFormat='{}{0} Issues Pending'}" 
+                                           FontWeight="Bold" 
+                                           FontSize="12" 
+                                           Foreground="{DynamicResource ThemeAlertRedBrush}"/>
+                            </Border>
+                        </Grid>
+
+                        <!-- If No Issues -->
+                        <Border IsVisible="{Binding !HasDeadLettersDetected}" 
+                                Background="{DynamicResource ThemeSuccessGreenBackgroundBrush}" 
+                                BorderBrush="{DynamicResource ThemeSuccessGreenBorderBrush}" 
+                                BorderThickness="1" 
+                                CornerRadius="8" 
+                                Padding="20">
+                            <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Center">
+                                <TextBlock Text="🎉" FontSize="20" VerticalAlignment="Center"/>
+                                <TextBlock Text="All clean! No dead-lettered messages found in this namespace." 
+                                           FontSize="14" 
+                                           FontWeight="SemiBold" 
+                                           Foreground="{DynamicResource ThemeSuccessGreenBrush}" 
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Hotlist Items -->
+                        <ItemsControl ItemsSource="{Binding HotlistEntities}" 
+                                      IsVisible="{Binding HasDeadLettersDetected}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="models:ServiceBusEntityMetric">
+                                    <Border Background="{DynamicResource ThemeAlertRedBackgroundBrush}"
+                                            BorderBrush="{DynamicResource ThemeAlertRedBorderBrush}"
+                                            BorderThickness="1"
+                                            CornerRadius="8"
+                                            Margin="0,0,0,10"
+                                            Padding="16,12">
+                                        <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto">
+                                            <!-- Kind Badge -->
+                                            <Border Grid.Column="0" 
+                                                    Background="{DynamicResource ThemeCardBackgroundBrush}" 
+                                                    BorderBrush="{DynamicResource ThemeCardBorderBrush}" 
+                                                    BorderThickness="1" 
+                                                    CornerRadius="4" 
+                                                    Padding="8,3" 
+                                                    VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding KindDisplay}" 
+                                                           FontSize="11" 
+                                                           FontWeight="SemiBold" 
+                                                           Foreground="{DynamicResource ThemeTextSecondaryBrush}"/>
+                                            </Border>
+
+                                            <!-- Entity Name -->
+                                            <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding DisplayName}" 
+                                                           FontSize="14" 
+                                                           FontWeight="Bold" 
+                                                           Foreground="{DynamicResource ThemeTextPrimaryBrush}"/>
+                                                <TextBlock Text="{Binding FormattedLastActivity, StringFormat='Last active: {0}'}" 
+                                                           FontSize="11" 
+                                                           Foreground="{DynamicResource ThemeTextMutedBrush}"/>
+                                            </StackPanel>
+
+                                            <!-- Active Count -->
+                                            <StackPanel Grid.Column="2" Margin="20,0" VerticalAlignment="Center" HorizontalAlignment="Right">
+                                                <TextBlock Text="{Binding FormattedActiveCount}" 
+                                                           FontSize="14" 
+                                                           FontWeight="SemiBold" 
+                                                           HorizontalAlignment="Right"/>
+                                                <TextBlock Text="Active Msgs" 
+                                                           FontSize="10" 
+                                                           Foreground="{DynamicResource ThemeTextMutedBrush}" 
+                                                           HorizontalAlignment="Right"/>
+                                            </StackPanel>
+
+                                            <!-- DLQ Count Badge -->
+                                            <Border Grid.Column="3" 
+                                                    Background="{DynamicResource ThemeAlertRedBrush}" 
+                                                    CornerRadius="6" 
+                                                    Padding="12,6" 
+                                                    Margin="0,0,16,0" 
+                                                    VerticalAlignment="Center">
+                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                    <TextBlock Text="🚨" FontSize="12"/>
+                                                    <TextBlock Text="{Binding FormattedDeadLetterCount, StringFormat='{}{0} DLQ'}" 
+                                                               Foreground="#FFFFFF" 
+                                                               FontWeight="ExtraBold" 
+                                                               FontSize="13"/>
+                                                </StackPanel>
+                                            </Border>
+
+                                            <!-- Action Button -->
+                                            <Button Grid.Column="4" 
+                                                    Classes="Inspect" 
+                                                    Content="Inspect DLQ"
+                                                    Command="{Binding #RootWindow.((vm:MainWindowViewModel)DataContext).InspectEntityCommand}"
+                                                    CommandParameter="{Binding .}"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <!-- ALL ENTITIES EXPLORER TABLE -->
+                <Border Classes="Card" Padding="20">
+                    <StackPanel Spacing="16">
+                        <!-- Stud accent row -->
+                        <Rectangle Height="{DynamicResource ThemeCardHeaderAccentHeight}" 
+                                   Fill="{DynamicResource ThemeCardHeaderAccentBrush}" 
+                                   Margin="-20,-20,-20,4"/>
+
+                        <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12">
+                                <TextBlock Text="All Entities" 
+                                           FontSize="16" 
+                                           FontWeight="Bold" 
+                                           VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding FilteredEntities.Count, StringFormat='({0} items)'}" 
+                                           FontSize="13" 
+                                           Foreground="{DynamicResource ThemeTextMutedBrush}" 
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+
+                            <!-- Filter & Search Controls -->
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12">
+                                <!-- Search Input -->
+                                <TextBox Text="{Binding SearchText}" 
+                                         Watermark="Search queues and topics..." 
+                                         Width="260" 
+                                         Height="32" 
+                                         CornerRadius="6"/>
+
+                                <!-- Filter Buttons -->
+                                <ComboBox ItemsSource="{Binding AvailableFilters}" 
+                                          SelectedItem="{Binding SelectedFilter}"
+                                          Width="150" 
+                                          Height="32" 
+                                          CornerRadius="6"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- DataGrid -->
+                        <DataGrid ItemsSource="{Binding FilteredEntities}" 
+                                  AutoGenerateColumns="False" 
+                                  IsReadOnly="True" 
+                                  GridLinesVisibility="Horizontal"
+                                  HeadersVisibility="Column"
+                                  CanUserResizeColumns="True"
+                                  CanUserSortColumns="True"
+                                  RowBackground="Transparent"
+                                  MinHeight="250">
+                            <DataGrid.Columns>
+                                <!-- Kind -->
+                                <DataGridTemplateColumn Header="Type" Width="140">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate DataType="models:ServiceBusEntityMetric">
+                                            <Border Background="{DynamicResource ThemeCardBorderBrush}" 
+                                                    CornerRadius="4" 
+                                                    Padding="6,2" 
+                                                    HorizontalAlignment="Left" 
+                                                    VerticalAlignment="Center" 
+                                                    Margin="8,0">
+                                                <TextBlock Text="{Binding KindDisplay}" 
+                                                           FontSize="11" 
+                                                           FontWeight="SemiBold" 
+                                                           Foreground="{DynamicResource ThemeTextSecondaryBrush}"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <!-- Name -->
+                                <DataGridTextColumn Header="Entity Name" 
+                                                    Binding="{Binding DisplayName}" 
+                                                    Width="*" 
+                                                    FontWeight="SemiBold"/>
+
+                                <!-- Dead Letters (Highlighted) -->
+                                <DataGridTemplateColumn Header="Dead Letters" Width="130">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate DataType="models:ServiceBusEntityMetric">
+                                            <Panel VerticalAlignment="Center" Margin="8,0">
+                                                <Border IsVisible="{Binding HasDeadLetters}" 
+                                                        Background="{DynamicResource ThemeAlertRedBrush}" 
+                                                        CornerRadius="4" 
+                                                        Padding="8,2" 
+                                                        HorizontalAlignment="Left">
+                                                    <TextBlock Text="{Binding FormattedDeadLetterCount}" 
+                                                               Foreground="#FFFFFF" 
+                                                               FontWeight="Bold" 
+                                                               FontSize="12"/>
+                                                </Border>
+                                                <TextBlock IsVisible="{Binding !HasDeadLetters}" 
+                                                           Text="0" 
+                                                           Foreground="{DynamicResource ThemeTextMutedBrush}" 
+                                                           FontSize="12"/>
+                                            </Panel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <!-- Active Count -->
+                                <DataGridTextColumn Header="Active Messages" 
+                                                    Binding="{Binding FormattedActiveCount}" 
+                                                    Width="130"/>
+
+                                <!-- Size -->
+                                <DataGridTextColumn Header="Size" 
+                                                    Binding="{Binding FormattedSize}" 
+                                                    Width="100"/>
+
+                                <!-- Last Activity -->
+                                <DataGridTextColumn Header="Last Activity" 
+                                                    Binding="{Binding FormattedLastActivity}" 
+                                                    Width="120"/>
+
+                                <!-- Actions -->
+                                <DataGridTemplateColumn Header="Action" Width="120">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate DataType="models:ServiceBusEntityMetric">
+                                            <Button Classes="Inspect" 
+                                                    Content="Inspect" 
+                                                    FontSize="11" 
+                                                    Padding="10,4" 
+                                                    Margin="4" 
+                                                    IsVisible="{Binding HasDeadLetters}"
+                                                    Command="{Binding #RootWindow.((vm:MainWindowViewModel)DataContext).InspectEntityCommand}"
+                                                    CommandParameter="{Binding .}"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </StackPanel>
+                </Border>
+
+                <!-- STATUS BAR -->
+                <Border Background="Transparent" Padding="4">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Grid.Column="0" 
+                                   Text="{Binding StatusMessage}" 
+                                   FontSize="11" 
+                                   Foreground="{DynamicResource ThemeTextMutedBrush}"/>
+                        <TextBlock Grid.Column="1" 
+                                   Text="Azure Service Bus DLQ Monitor v1.0" 
+                                   FontSize="11" 
+                                   Foreground="{DynamicResource ThemeTextMutedBrush}"/>
+                    </Grid>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- DEAD LETTER INSPECTOR DRAWER / MODAL OVERLAY -->
+        <Grid Grid.Row="0" Grid.RowSpan="2" 
+              IsVisible="{Binding Inspector.IsOpen}" 
+              ZIndex="100">
+            <!-- Dimmed Backdrop -->
+            <Border Background="#90000000" 
+                    PointerPressed="OnBackdropPointerPressed"/>
+
+            <!-- Side Drawer Panel -->
+            <Border HorizontalAlignment="Right" 
+                    Width="680" 
+                    Background="{DynamicResource ThemeCardBackgroundBrush}" 
+                    BorderBrush="{DynamicResource ThemeCardBorderBrush}" 
+                    BorderThickness="1,0,0,0" 
+                    BoxShadow="-8 0 24 0 #30000000">
+                <Grid RowDefinitions="Auto,Auto,*" Margin="24">
+                    <!-- Drawer Header -->
+                    <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+                        <StackPanel Grid.Column="0" Spacing="4">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="🔍" FontSize="18"/>
+                                <TextBlock Text="Dead Letter Inspector" 
+                                           FontSize="18" 
+                                           FontWeight="Bold"/>
+                            </StackPanel>
+                            <TextBlock Text="{Binding Inspector.EntityDisplayName}" 
+                                       FontSize="13" 
+                                       FontWeight="SemiBold" 
+                                       Foreground="{DynamicResource ThemeAccentBrush}"/>
+                        </StackPanel>
+
+                        <!-- Close Button -->
+                        <Button Grid.Column="1" 
+                                Content="✕" 
+                                Command="{Binding Inspector.CloseCommand}" 
+                                FontSize="16" 
+                                FontWeight="Bold" 
+                                Padding="10,4" 
+                                CornerRadius="6"/>
+                    </Grid>
+
+                    <Separator Grid.Row="1" Margin="0,16" Background="{DynamicResource ThemeCardBorderBrush}"/>
+
+                    <!-- Drawer Content -->
+                    <Grid Grid.Row="2" RowDefinitions="Auto,*,Auto">
+                        <!-- Message Selection Bar -->
+                        <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,14">
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                                <TextBlock Text="Peeked Messages:" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                <ComboBox ItemsSource="{Binding Inspector.Messages}" 
+                                          SelectedItem="{Binding Inspector.SelectedMessage}" 
+                                          Width="360">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate DataType="models:DeadLetterMessageDetail">
+                                            <TextBlock Text="{Binding MessageId, StringFormat='ID: {0}'}" FontSize="12"/>
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                            </StackPanel>
+
+                            <Button Grid.Column="1" 
+                                    Content="🔄 Re-Peek" 
+                                    Command="{Binding Inspector.RefreshCommand}" 
+                                    Padding="8,4" 
+                                    CornerRadius="6" 
+                                    FontSize="11"/>
+                        </Grid>
+
+                        <!-- Selected Message Details Scroll -->
+                        <ScrollViewer Grid.Row="1">
+                            <StackPanel Spacing="14">
+                                <!-- Diagnostic Alert Box -->
+                                <Border Background="{DynamicResource ThemeAlertRedBackgroundBrush}" 
+                                        BorderBrush="{DynamicResource ThemeAlertRedBorderBrush}" 
+                                        BorderThickness="1" 
+                                        CornerRadius="8" 
+                                        Padding="16">
+                                    <StackPanel Spacing="8">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <TextBlock Text="🚨" FontSize="16"/>
+                                            <TextBlock Text="Dead Letter Reason:" 
+                                                       FontWeight="Bold" 
+                                                       Foreground="{DynamicResource ThemeAlertRedBrush}"/>
+                                            <TextBlock Text="{Binding Inspector.SelectedMessage.DeadLetterReason}" 
+                                                       FontWeight="ExtraBold" 
+                                                       Foreground="{DynamicResource ThemeAlertRedBrush}"/>
+                                        </StackPanel>
+
+                                        <TextBlock Text="Error Description:" 
+                                                   FontWeight="SemiBold" 
+                                                   FontSize="12" 
+                                                   Foreground="{DynamicResource ThemeTextSecondaryBrush}"/>
+                                        <TextBlock Text="{Binding Inspector.SelectedMessage.DeadLetterErrorDescription}" 
+                                                   FontSize="12" 
+                                                   Foreground="{DynamicResource ThemeTextPrimaryBrush}" 
+                                                   TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Metadata Table -->
+                                <Border Background="{DynamicResource ThemeBackgroundBrush}" 
+                                        BorderBrush="{DynamicResource ThemeCardBorderBrush}" 
+                                        BorderThickness="1" 
+                                        CornerRadius="8" 
+                                        Padding="14">
+                                    <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto" Margin="4">
+                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Message ID:" FontWeight="SemiBold" FontSize="12" Margin="0,3,12,3"/>
+                                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Inspector.SelectedMessage.MessageId}" FontSize="12" TextWrapping="Wrap" Margin="0,3"/>
+
+                                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Enqueued Time:" FontWeight="SemiBold" FontSize="12" Margin="0,3,12,3"/>
+                                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Inspector.SelectedMessage.FormattedEnqueuedTime}" FontSize="12" Margin="0,3"/>
+
+                                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Sequence Number:" FontWeight="SemiBold" FontSize="12" Margin="0,3,12,3"/>
+                                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Inspector.SelectedMessage.SequenceNumber}" FontSize="12" Margin="0,3"/>
+
+                                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Delivery Attempts:" FontWeight="SemiBold" FontSize="12" Margin="0,3,12,3"/>
+                                        <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding Inspector.SelectedMessage.DeliveryCount}" FontSize="12" FontWeight="Bold" Margin="0,3"/>
+                                    </Grid>
+                                </Border>
+
+                                <!-- Message Body Header & Copy Button -->
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Grid.Column="0" Text="Message Payload Body" FontWeight="Bold" VerticalAlignment="Center"/>
+                                    <Button Grid.Column="1" 
+                                            Content="{Binding Inspector.CopyStatusText}" 
+                                            Command="{Binding Inspector.CopyBodyCommand}" 
+                                            Classes="ActionPrimary"
+                                            Padding="10,4" 
+                                            FontSize="11"/>
+                                </Grid>
+
+                                <!-- Formatted Payload Viewer -->
+                                <Border Background="{DynamicResource ThemeInputBackgroundBrush}" 
+                                        BorderBrush="{DynamicResource ThemeInputBorderBrush}" 
+                                        BorderThickness="1" 
+                                        CornerRadius="8" 
+                                        Padding="12">
+                                    <TextBox Text="{Binding Inspector.SelectedMessage.FormattedBody}" 
+                                             IsReadOnly="True" 
+                                             FontFamily="Monospace" 
+                                             FontSize="12" 
+                                             AcceptsReturn="True" 
+                                             TextWrapping="Wrap" 
+                                             Background="Transparent" 
+                                             BorderThickness="0" 
+                                             MaxHeight="260"/>
+                                </Border>
+                            </StackPanel>
+                        </ScrollViewer>
+
+                        <!-- Drawer Footer Buttons -->
+                        <Grid Grid.Row="2" ColumnDefinitions="*,Auto">
+                            <TextBlock Grid.Column="0" 
+                                       Text="⚠️ Messages are peeked non-destructively and remain in DLQ." 
+                                       FontSize="11" 
+                                       Foreground="{DynamicResource ThemeTextMutedBrush}" 
+                                       VerticalAlignment="Center"/>
+                            <Button Grid.Column="1" 
+                                    Content="Close" 
+                                    Command="{Binding Inspector.CloseCommand}" 
+                                    Padding="16,8" 
+                                    CornerRadius="6"/>
+                        </Grid>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</Window>

@@ -1,0 +1,44 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- Barbie-Inspired Chic Palette -->
+    <SolidColorBrush x:Key="ThemeBackgroundBrush" Color="#FFF0F5" />
+    <SolidColorBrush x:Key="ThemeHeaderBackgroundBrush" Color="#E0218A" />
+    <SolidColorBrush x:Key="ThemeCardBackgroundBrush" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="ThemeCardBorderBrush" Color="#FFB6C1" />
+    <Thickness x:Key="ThemeCardBorderThickness">1</Thickness>
+    <CornerRadius x:Key="ThemeCardCornerRadius">14</CornerRadius>
+    
+    <SolidColorBrush x:Key="ThemeTextPrimaryBrush" Color="#4A0E2E" />
+    <SolidColorBrush x:Key="ThemeTextSecondaryBrush" Color="#8B3A62" />
+    <SolidColorBrush x:Key="ThemeTextMutedBrush" Color="#BA68C8" />
+    
+    <!-- Dead Letter Alert (Vibrant Barbie Magenta/Hot Pink) -->
+    <SolidColorBrush x:Key="ThemeAlertRedBrush" Color="#E0218A" />
+    <SolidColorBrush x:Key="ThemeAlertRedBackgroundBrush" Color="#FFE4EC" />
+    <SolidColorBrush x:Key="ThemeAlertRedBorderBrush" Color="#FF80AB" />
+
+    <!-- Warning (Peach Gold) -->
+    <SolidColorBrush x:Key="ThemeWarningAmberBrush" Color="#F59E0B" />
+    <SolidColorBrush x:Key="ThemeWarningAmberBackgroundBrush" Color="#FFF8E1" />
+    <SolidColorBrush x:Key="ThemeWarningAmberBorderBrush" Color="#FFE082" />
+
+    <!-- Success / Healthy (Pastel Mint) -->
+    <SolidColorBrush x:Key="ThemeSuccessGreenBrush" Color="#10B981" />
+    <SolidColorBrush x:Key="ThemeSuccessGreenBackgroundBrush" Color="#E8F8F5" />
+    <SolidColorBrush x:Key="ThemeSuccessGreenBorderBrush" Color="#A7F3D0" />
+
+    <!-- Accent (Hot Pink) -->
+    <SolidColorBrush x:Key="ThemeAccentBrush" Color="#E0218A" />
+    <SolidColorBrush x:Key="ThemeAccentForegroundBrush" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="ThemeAccentHoverBrush" Color="#C2185B" />
+
+    <!-- Grid styling -->
+    <SolidColorBrush x:Key="ThemeDataGridHeaderBackgroundBrush" Color="#FCE4EC" />
+    <SolidColorBrush x:Key="ThemeDataGridRowHoverBrush" Color="#FFF0F5" />
+    <SolidColorBrush x:Key="ThemeInputBackgroundBrush" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="ThemeInputBorderBrush" Color="#FFB6C1" />
+
+    <!-- Header Accent / Studs: None for Barbie -->
+    <SolidColorBrush x:Key="ThemeCardHeaderAccentBrush" Color="Transparent" />
+    <x:Double x:Key="ThemeCardHeaderAccentHeight">0</x:Double>
+</ResourceDictionary>
