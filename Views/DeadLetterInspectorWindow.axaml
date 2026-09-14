@@ -1,0 +1,240 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:AzureDeadLetterMonitor.ViewModels"
+        xmlns:models="using:AzureDeadLetterMonitor.Models"
+        mc:Ignorable="d" d:DesignWidth="1050" d:DesignHeight="680"
+        x:Class="AzureDeadLetterMonitor.Views.DeadLetterInspectorWindow"
+        x:DataType="vm:MessageInspectorViewModel"
+        Title="{Binding EntityDisplayName, StringFormat='Dead Letter Inspector - {0}'}"
+        Width="1050" Height="680"
+        MinWidth="800" MinHeight="500"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource ThemeBackgroundBrush}">
+
+    <Window.KeyBindings>
+        <KeyBinding Gesture="Escape" Command="{Binding CloseCommand}" />
+    </Window.KeyBindings>
+
+    <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="24">
+        <!-- Window Header -->
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,16">
+            <StackPanel Grid.Column="0" Spacing="6">
+                <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                    <TextBlock Text="🔍" FontSize="22"/>
+                    <TextBlock Text="Dead Letter Queue Inspector" 
+                               FontSize="20" 
+                               FontWeight="Bold" 
+                               Foreground="{DynamicResource ThemeTextPrimaryBrush}"/>
+                    <Border Background="{DynamicResource ThemeAlertRedBackgroundBrush}"
+                            BorderBrush="{DynamicResource ThemeAlertRedBorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="6"
+                            Padding="8,3"
+                            VerticalAlignment="Center">
+                        <TextBlock Text="{Binding DeadLetterCount, StringFormat='🚨 {0:N0} Dead Letters'}"
+                                   FontSize="12"
+                                   FontWeight="Bold"
+                                   Foreground="{DynamicResource ThemeAlertRedBrush}"/>
+                    </Border>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock Text="Entity:" 
+                               FontSize="13" 
+                               FontWeight="SemiBold" 
+                               Foreground="{DynamicResource ThemeTextSecondaryBrush}"/>
+                    <TextBlock Text="{Binding EntityDisplayName}" 
+                               FontSize="13" 
+                               FontWeight="Bold" 
+                               Foreground="{DynamicResource ThemeAccentBrush}"/>
+                    <TextBlock Text="•" Foreground="{DynamicResource ThemeTextMutedBrush}" Margin="4,0"/>
+                    <TextBlock Text="{Binding EntityKind}" 
+                               FontSize="12" 
+                               Foreground="{DynamicResource ThemeTextMutedBrush}" 
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+            </StackPanel>
+
+            <!-- Window Header Actions -->
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Top">
+                <Button Content="🔄 Refresh / Reset" 
+                        Command="{Binding RefreshCommand}" 
+                        Padding="12,6" 
+                        CornerRadius="6" 
+                        FontSize="12"/>
+                <Button Content="✕ Close (Esc)" 
+                        Command="{Binding CloseCommand}" 
+                        Padding="12,6" 
+                        CornerRadius="6" 
+                        FontSize="12"
+                        FontWeight="SemiBold"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- Error Banner if any -->
+        <Border Grid.Row="1" 
+                IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                Background="{DynamicResource ThemeAlertRedBackgroundBrush}"
+                BorderBrush="{DynamicResource ThemeAlertRedBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="12"
+                Margin="0,0,0,12">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <TextBlock Text="⚠️" FontSize="16"/>
+                <TextBlock Text="{Binding ErrorMessage}" 
+                           Foreground="{DynamicResource ThemeAlertRedBrush}" 
+                           FontWeight="SemiBold" 
+                           VerticalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Message List Card -->
+        <Border Grid.Row="2" 
+                Background="{DynamicResource ThemeCardBackgroundBrush}" 
+                BorderBrush="{DynamicResource ThemeCardBorderBrush}" 
+                BorderThickness="1" 
+                CornerRadius="8" 
+                Padding="0">
+            <Grid RowDefinitions="Auto,*">
+                <!-- Toolbar with hint -->
+                <Border Grid.Row="0" 
+                        Background="{DynamicResource ThemeInputBackgroundBrush}" 
+                        BorderBrush="{DynamicResource ThemeCardBorderBrush}" 
+                        BorderThickness="0,0,0,1" 
+                        CornerRadius="8,8,0,0"
+                        Padding="14,10">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                            <TextBlock Text="📋 Messages in DLQ" FontWeight="Bold" FontSize="13"/>
+                            <TextBlock Text="— Click or double-click any row to view full details" 
+                                       FontSize="12" 
+                                       Foreground="{DynamicResource ThemeTextSecondaryBrush}" 
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <!-- Loading Indicator -->
+                        <ProgressBar Grid.Column="1" 
+                                     IsIndeterminate="True" 
+                                     IsVisible="{Binding IsLoading}" 
+                                     Width="120" Height="4" 
+                                     VerticalAlignment="Center"/>
+                    </Grid>
+                </Border>
+
+                <!-- Row-by-Row Paged Message DataGrid -->
+                <DataGrid x:Name="MessagesGrid"
+                          Grid.Row="1"
+                          ItemsSource="{Binding Messages}"
+                          SelectedItem="{Binding SelectedMessage, Mode=TwoWay}"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True"
+                          GridLinesVisibility="Horizontal"
+                          CanUserResizeColumns="True"
+                          CanUserReorderColumns="False"
+                          CanUserSortColumns="False"
+                          SelectionMode="Single"
+                          SelectionChanged="OnGridSelectionChanged"
+                          DoubleTapped="OnGridDoubleTapped">
+                    <DataGrid.Columns>
+                        <!-- 1. Enqueued Time -->
+                        <DataGridTextColumn Header="Time" 
+                                            Binding="{Binding FormattedEnqueuedTime}" 
+                                            Width="160"/>
+
+                        <!-- 2. Message ID -->
+                        <DataGridTextColumn Header="Message ID" 
+                                            Binding="{Binding MessageId}" 
+                                            Width="190"/>
+
+                        <!-- 3. Sequence Number -->
+                        <DataGridTextColumn Header="Sequence #" 
+                                            Binding="{Binding SequenceNumber}" 
+                                            Width="110"/>
+
+                        <!-- 4. Number of Tries -->
+                        <DataGridTextColumn Header="Tries" 
+                                            Binding="{Binding DeliveryCount}" 
+                                            Width="75"/>
+
+                        <!-- 5. First X Characters in Message -->
+                        <DataGridTextColumn Header="Message Payload Preview" 
+                                            Binding="{Binding BodyPreview}" 
+                                            Width="*"/>
+
+                        <!-- Action: Open Detail Window -->
+                        <DataGridTemplateColumn Header="Action" Width="120">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate DataType="models:DeadLetterMessageDetail">
+                                    <Button Content="Details ↗" 
+                                            Click="OnDetailsButtonClick" 
+                                            Tag="{Binding}"
+                                            Padding="8,4" 
+                                            FontSize="11" 
+                                            CornerRadius="4" 
+                                            HorizontalAlignment="Center"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+        </Border>
+
+        <!-- Pagination & Footer Controls -->
+        <Grid Grid.Row="3" ColumnDefinitions="Auto,*,Auto" Margin="0,16,0,0">
+            <!-- Information / Non-destructive badge -->
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                <TextBlock Text="🛡️ Peeked non-destructively." 
+                           FontSize="12" 
+                           Foreground="{DynamicResource ThemeTextMutedBrush}" 
+                           VerticalAlignment="Center"/>
+            </StackPanel>
+
+            <!-- Page Navigation -->
+            <StackPanel Grid.Column="1" 
+                        Orientation="Horizontal" 
+                        Spacing="12" 
+                        HorizontalAlignment="Center" 
+                        VerticalAlignment="Center">
+                <Button Content="◀ Previous Page" 
+                        Command="{Binding PreviousPageCommand}" 
+                        IsEnabled="{Binding HasPreviousPage}"
+                        Padding="14,8" 
+                        CornerRadius="6" 
+                        FontSize="12" 
+                        FontWeight="SemiBold"/>
+
+                <Border Background="{DynamicResource ThemeInputBackgroundBrush}" 
+                        BorderBrush="{DynamicResource ThemeCardBorderBrush}" 
+                        BorderThickness="1" 
+                        CornerRadius="6" 
+                        Padding="12,6">
+                    <TextBlock Text="{Binding PageInfoDisplay}" 
+                               FontSize="12" 
+                               FontWeight="Bold" 
+                               Foreground="{DynamicResource ThemeTextPrimaryBrush}"/>
+                </Border>
+
+                <Button Content="Next Page ▶" 
+                        Command="{Binding NextPageCommand}" 
+                        IsEnabled="{Binding HasNextPage}"
+                        Classes="ActionPrimary"
+                        Padding="14,8" 
+                        CornerRadius="6" 
+                        FontSize="12" 
+                        FontWeight="SemiBold"/>
+            </StackPanel>
+
+            <!-- Close Button -->
+            <Button Grid.Column="2" 
+                    Content="Close" 
+                    Command="{Binding CloseCommand}" 
+                    Padding="18,8" 
+                    CornerRadius="6" 
+                    FontSize="12"/>
+        </Grid>
+    </Grid>
+</Window>

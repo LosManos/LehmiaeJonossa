@@ -18,4 +18,8 @@ public class AppSettings
     public string? UserAssignedClientId { get; set; }
     public int AutoRefreshSeconds { get; set; } = 60;
     public bool AutoRefreshEnabled { get; set; } = true;
+    public double? MessageDetailWindowWidth { get; set; }
+    public double? MessageDetailWindowHeight { get; set; }
+    public int? MessageDetailWindowX { get; set; }
+    public int? MessageDetailWindowY { get; set; }
 }

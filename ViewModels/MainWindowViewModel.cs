@@ -134,6 +134,7 @@ public partial class MainWindowViewModel : ViewModelBase
         try
         {
             _settings = await _configService.LoadSettingsAsync();
+            SettingsLoaded?.Invoke(_settings);
 
             SelectedTheme = _settings.Theme;
             _themeService.ApplyTheme(SelectedTheme);
@@ -395,11 +396,24 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
+    public event Action<AppSettings>? SettingsLoaded;
+    public event Action<MessageInspectorViewModel>? OpenInspectorWindowRequested;
+
+    public void UpdateMessageDetailWindowBounds(double width, double height, int x, int y)
+    {
+        _settings.MessageDetailWindowWidth = width;
+        _settings.MessageDetailWindowHeight = height;
+        _settings.MessageDetailWindowX = x;
+        _settings.MessageDetailWindowY = y;
+        _ = _configService.SaveSettingsAsync(_settings);
+    }
+
     [RelayCommand]
     public async Task InspectEntityAsync(ServiceBusEntityMetric? entity)
     {
         if (entity == null) return;
         await Inspector.OpenForEntityAsync(entity);
+        OpenInspectorWindowRequested?.Invoke(Inspector);
     }
 
     [RelayCommand]

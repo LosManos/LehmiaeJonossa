@@ -15,9 +15,12 @@ A high-performance cross-platform desktop monitor built with **.NET 10** and **A
 - **🛡️ Managed Identity & Azure CLI Support**:
   - Uses `DefaultAzureCredential`: automatically uses Azure **Managed Identity** (System or User-Assigned) in Azure environments and **Azure CLI** (`az login`), PowerShell, or Visual Studio when running locally on macOS & Windows.
   - Explicit System-Assigned and User-Assigned Managed Identity credential modes.
-- **🔍 Non-Destructive Message Inspector**:
-  - Peek dead-lettered messages directly from the dashboard without consuming, locking, or modifying them.
-  - Displays `DeadLetterReason`, `DeadLetterErrorDescription`, delivery count, enqueue timestamp, and syntax-formatted JSON body.
+- **🔍 Dedicated Desktop DLQ Inspector & Detail Windows**:
+  - **DeadLetterInspectorWindow**: Proper standalone window with a tabular, row-by-row view of messages displaying Enqueued Time, Message ID, Sequence #, Delivery Attempts, and Message Body Preview.
+  - **Safe Pagination**: Sequence-based pagination ("Next Page ▶" / "◀ Previous Page") strictly capped at safe batch sizes.
+  - **MessageDetailWindow**: Standalone window revealing all message diagnostics, headers, delivery attempts, custom application properties, and formatted body with syntax copying.
+  - **Previous & Next Navigation**: Seamlessly navigate back and forth through peeked messages directly from the detail window.
+  - **Esc Key Closure**: Both inspector and detail windows close immediately on pressing `Esc`.
 - **🎨 4 Interchangeable Themes**:
   - ☀️ **Light** (Default: crisp Fluent light theme)
   - 🌙 **Dark** (Sleek charcoal & slate dark mode)
@@ -30,7 +33,7 @@ A high-performance cross-platform desktop monitor built with **.NET 10** and **A
 - **💾 Local Configuration Persistence**:
   - Configured namespaces and preferred themes saved in `~/.azure-dead-letter-monitor/config.json`.
 - **🧪 Built-in Demo Mode**:
-  - Toggle between live Azure Service Bus telemetry and realistic mock data to preview workflows without live cloud resources.
+  - Toggle between live Azure Service Bus telemetry and realistic mock data with multi-page demo dead letters to preview workflows without live cloud resources.
 
 ---
 
@@ -84,11 +87,11 @@ AzureDeadLetterMonitor/
 ├── Models/
 │   ├── AppSettings.cs              # Saved namespaces, theme, and auth configuration
 │   ├── AppTheme.cs                 # Light, Dark, Lego, Barbie enum
-│   ├── DeadLetterMessageDetail.cs  # Peeked DLQ message model with JSON formatter
+│   ├── DeadLetterMessageDetail.cs  # Peeked DLQ message model with JSON formatter & preview
 │   └── ServiceBusEntityMetric.cs   # Queue / Topic Subscription metric properties
 ├── Services/
 │   ├── IServiceBusMonitorService.cs
-│   ├── AzureServiceBusMonitorService.cs # Azure Service Bus Admin & Client integration
+│   ├── AzureServiceBusMonitorService.cs # Azure Service Bus Admin & Client integration with pagination
 │   ├── IConfigurationService.cs
 │   ├── ConfigurationService.cs     # Local ~/.azure-dead-letter-monitor/config.json
 │   ├── IThemeService.cs
@@ -101,10 +104,15 @@ AzureDeadLetterMonitor/
 ├── ViewModels/
 │   ├── ViewModelBase.cs
 │   ├── MainWindowViewModel.cs      # Core dashboard orchestrator & timer
-│   └── MessageInspectorViewModel.cs# Non-destructive DLQ message peeking
+│   ├── MessageInspectorViewModel.cs# Paged DLQ message inspector orchestrator
+│   └── MessageDetailViewModel.cs   # Message detail viewer with Previous/Next navigation
 ├── Views/
 │   ├── MainWindow.axaml            # Fluent responsive dashboard layout
-│   └── MainWindow.axaml.cs
+│   ├── MainWindow.axaml.cs
+│   ├── DeadLetterInspectorWindow.axaml      # Proper DLQ inspector window
+│   ├── DeadLetterInspectorWindow.axaml.cs
+│   ├── MessageDetailWindow.axaml            # Proper message detail window
+│   └── MessageDetailWindow.axaml.cs
 └── tests/
     └── AzureDeadLetterMonitor.Tests/
         └── MonitorTests.cs         # Automated unit tests

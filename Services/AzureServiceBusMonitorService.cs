@@ -205,12 +205,13 @@ public class AzureServiceBusMonitorService : IServiceBusMonitorService, IAsyncDi
     public async Task<IReadOnlyList<DeadLetterMessageDetail>> PeekDeadLetterMessagesAsync(
         string entityName, 
         string? subscriptionName = null, 
+        long? fromSequenceNumber = null,
         int maxMessages = 20, 
         CancellationToken ct = default)
     {
         if (IsDemoMode || _busClient == null)
         {
-            return GetDemoDeadLetterMessages(entityName, subscriptionName);
+            return GetDemoDeadLetterMessages(entityName, subscriptionName, fromSequenceNumber, maxMessages);
         }
 
         ServiceBusReceiver receiver;
@@ -231,7 +232,7 @@ public class AzureServiceBusMonitorService : IServiceBusMonitorService, IAsyncDi
 
         await using (receiver)
         {
-            var received = await receiver.PeekMessagesAsync(maxMessages, cancellationToken: ct);
+            var received = await receiver.PeekMessagesAsync(maxMessages, fromSequenceNumber: fromSequenceNumber, cancellationToken: ct);
             return received.Select(m => new DeadLetterMessageDetail
             {
                 MessageId = m.MessageId ?? Guid.NewGuid().ToString(),
@@ -347,92 +348,67 @@ public class AzureServiceBusMonitorService : IServiceBusMonitorService, IAsyncDi
         };
     }
 
-    private static IReadOnlyList<DeadLetterMessageDetail> GetDemoDeadLetterMessages(string entityName, string? subName)
+    private static IReadOnlyList<DeadLetterMessageDetail> GetDemoDeadLetterMessages(
+        string entityName, 
+        string? subName,
+        long? fromSequenceNumber,
+        int maxMessages)
     {
         var now = DateTimeOffset.UtcNow;
-        return new List<DeadLetterMessageDetail>
+        var reasons = new[]
         {
-            new()
-            {
-                MessageId = "msg-ord-94820491",
-                SequenceNumber = 500,
-                EnqueuedTime = now.AddMinutes(-18),
-                DeliveryCount = 10,
-                DeadLetterReason = "MaxDeliveryCountExceeded",
-                DeadLetterErrorDescription = "The message could not be processed after 10 delivery attempts: Connection timed out connecting to inventory service [Endpoint: inv-api.internal:5001].",
-                ContentType = "application/json",
-                CorrelationId = "corr-88210-941",
-                Subject = "OrderPlacedEvent",
-                ApplicationProperties = new Dictionary<string, object>
-                {
-                    { "OriginatingService", "CheckoutService" },
-                    { "TenantId", "tenant-eu-central" },
-                    { "Priority", "High" }
-                },
-                BodyRaw = """
-                {
-                  "orderId": "ORD-98214-X",
-                  "customerId": "CUST-4819",
-                  "customerName": "Acme Industrial Corp",
-                  "currency": "EUR",
-                  "items": [
-                    { "sku": "SKU-HARDWARE-99", "quantity": 2, "unitPrice": 74.99 },
-                    { "sku": "SKU-CABLE-01", "quantity": 5, "unitPrice": 12.50 }
-                  ],
-                  "totalAmount": 212.48,
-                  "paymentRef": "PAY-EUR-941029",
-                  "timestamp": "2026-09-13T10:15:00Z"
-                }
-                """
-            },
-            new()
-            {
-                MessageId = "msg-ord-94820823",
-                SequenceNumber = 531,
-                EnqueuedTime = now.AddMinutes(-14),
-                DeliveryCount = 10,
-                DeadLetterReason = "MaxDeliveryCountExceeded",
-                DeadLetterErrorDescription = "The message was dead-lettered because max delivery count was exceeded. Last error: DeserializationException: Field 'customerId' cannot be null.",
-                ContentType = "application/json",
-                CorrelationId = "corr-88210-994",
-                Subject = "OrderPlacedEvent",
-                ApplicationProperties = new Dictionary<string, object>
-                {
-                    { "OriginatingService", "CheckoutService" },
-                    { "RetryAttempt", 10 }
-                },
-                BodyRaw = """
-                {
-                  "orderId": "ORD-98230-B",
-                  "customerId": null,
-                  "totalAmount": 49.00
-                }
-                """
-            },
-            new()
-            {
-                MessageId = "msg-ord-94820495",
-                SequenceNumber = 532,
-                EnqueuedTime = now.AddMinutes(-9),
-                DeliveryCount = 1,
-                DeadLetterReason = "SchemaValidationFailed",
-                DeadLetterErrorDescription = "Business validation rejected: invalid currency code 'ZZZ' provided.",
-                ContentType = "application/json",
-                CorrelationId = "corr-99312-001",
-                Subject = "OrderValidationEvent",
-                ApplicationProperties = new Dictionary<string, object>
-                {
-                    { "Validator", "SchemaEngine_v2" }
-                },
-                BodyRaw = """
-                {
-                  "orderId": "ORD-INVALID-CURR",
-                  "currency": "ZZZ",
-                  "amount": 100.00
-                }
-                """
-            }
+            ("MaxDeliveryCountExceeded", "The message could not be processed after 10 delivery attempts: Connection timed out."),
+            ("SchemaValidationFailed", "Business validation rejected: invalid currency or required field missing."),
+            ("HeaderValidationFailed", "Missing required header 'X-Correlation-Source'."),
+            ("PaymentGatewayDeclined", "Payment processor rejected card token during capture.")
         };
+
+        var allMessages = new List<DeadLetterMessageDetail>();
+
+        // Generate 28 messages to match orders-processing metric count
+        for (int i = 0; i < 28; i++)
+        {
+            var seq = 500 + i;
+            var reasonInfo = reasons[i % reasons.Length];
+            var orderId = $"ORD-98{200 + i}-{(char)('A' + (i % 26))}";
+            allMessages.Add(new DeadLetterMessageDetail
+            {
+                MessageId = $"msg-ord-{94820000 + i}",
+                SequenceNumber = seq,
+                EnqueuedTime = now.AddMinutes(-30 + i),
+                DeliveryCount = (i % 3 == 0) ? 10 : (i % 3 + 1),
+                DeadLetterReason = reasonInfo.Item1,
+                DeadLetterErrorDescription = $"{reasonInfo.Item2} Details: Entity={entityName}, Sub={subName ?? "(none)"}, Record #{i + 1}.",
+                ContentType = "application/json",
+                CorrelationId = $"corr-88210-{100 + i}",
+                Subject = (i % 2 == 0) ? "OrderPlacedEvent" : "OrderValidationEvent",
+                ApplicationProperties = new Dictionary<string, object>
+                {
+                    { "OriginatingService", (i % 2 == 0) ? "CheckoutService" : "PaymentService" },
+                    { "TenantId", "tenant-eu-central" },
+                    { "Priority", (i % 5 == 0) ? "High" : "Normal" },
+                    { "Attempt", (i % 3 == 0) ? 10 : (i % 3 + 1) }
+                },
+                BodyRaw = $$"""
+                {
+                  "orderId": "{{orderId}}",
+                  "customerId": "CUST-{{4800 + i}}",
+                  "amount": {{25.50 + i * 4.25}},
+                  "currency": "EUR",
+                  "itemCount": {{(i % 4) + 1}},
+                  "notes": "Dead letter message #{{i + 1}} in {{entityName}}"
+                }
+                """
+            });
+        }
+
+        var query = allMessages.AsEnumerable();
+        if (fromSequenceNumber.HasValue)
+        {
+            query = query.Where(m => m.SequenceNumber >= fromSequenceNumber.Value);
+        }
+
+        return query.Take(maxMessages).ToList();
     }
 
     public async ValueTask DisposeAsync()

@@ -20,6 +20,34 @@ public class DeadLetterMessageDetail
 
     public string FormattedEnqueuedTime => EnqueuedTime.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss");
 
+    public string BodyPreview
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(BodyRaw))
+                return "(empty)";
+
+            var singleLine = BodyRaw.Replace("\r", " ").Replace("\n", " ").Trim();
+            return singleLine.Length > 80 ? singleLine.Substring(0, 80) + "..." : singleLine;
+        }
+    }
+
+    public IReadOnlyList<KeyValuePair<string, string>> ApplicationPropertiesList
+    {
+        get
+        {
+            if (ApplicationProperties == null || ApplicationProperties.Count == 0)
+                return Array.Empty<KeyValuePair<string, string>>();
+
+            var list = new List<KeyValuePair<string, string>>();
+            foreach (var kvp in ApplicationProperties)
+            {
+                list.Add(new KeyValuePair<string, string>(kvp.Key, kvp.Value?.ToString() ?? "null"));
+            }
+            return list;
+        }
+    }
+
     public string FormattedBody
     {
         get
@@ -40,3 +68,4 @@ public class DeadLetterMessageDetail
         }
     }
 }
+

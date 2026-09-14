@@ -144,4 +144,145 @@ public class MonitorTests
         var namespaces = await service.DiscoverNamespacesAsync();
         Assert.NotNull(namespaces);
     }
+
+    [Fact]
+    public void DeadLetterMessageDetail_BodyPreview_TruncatesAndFlattensNewlines()
+    {
+        var longBody = "Line 1\r\nLine 2 with very long content that exceeds eighty characters in length so that we can verify truncation behavior in the DataGrid row presentation.";
+        var detail = new DeadLetterMessageDetail
+        {
+            MessageId = "msg-prev-1",
+            SequenceNumber = 100,
+            EnqueuedTime = DateTimeOffset.UtcNow,
+            DeliveryCount = 3,
+            DeadLetterReason = "Failed",
+            BodyRaw = longBody
+        };
+
+        Assert.DoesNotContain("\r", detail.BodyPreview);
+        Assert.DoesNotContain("\n", detail.BodyPreview);
+        Assert.EndsWith("...", detail.BodyPreview);
+        Assert.True(detail.BodyPreview.Length <= 85);
+    }
+
+    [Fact]
+    public async Task ServiceBusMonitorService_Pagination_ReturnsPagingSlicesCorrectly()
+    {
+        var service = new AzureServiceBusMonitorService();
+        service.SetDemoMode(true);
+
+        // Page 1: 10 messages
+        var page1 = await service.PeekDeadLetterMessagesAsync("orders-processing", maxMessages: 10);
+        Assert.Equal(10, page1.Count);
+        Assert.Equal(500, page1.First().SequenceNumber);
+
+        // Page 2: starting after page 1
+        var nextSeq = page1.Last().SequenceNumber + 1;
+        var page2 = await service.PeekDeadLetterMessagesAsync("orders-processing", fromSequenceNumber: nextSeq, maxMessages: 10);
+        Assert.Equal(10, page2.Count);
+        Assert.Equal(page1.Last().SequenceNumber + 1, page2.First().SequenceNumber);
+        Assert.NotEqual(page1.First().MessageId, page2.First().MessageId);
+    }
+
+    [Fact]
+    public void MessageDetailViewModel_Navigation_StepsBackAndForthCorrectly()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var messages = new List<DeadLetterMessageDetail>
+        {
+            new() { MessageId = "id-1", SequenceNumber = 1, EnqueuedTime = now, DeliveryCount = 1, DeadLetterReason = "R1", BodyRaw = "b1" },
+            new() { MessageId = "id-2", SequenceNumber = 2, EnqueuedTime = now, DeliveryCount = 2, DeadLetterReason = "R2", BodyRaw = "b2" },
+            new() { MessageId = "id-3", SequenceNumber = 3, EnqueuedTime = now, DeliveryCount = 3, DeadLetterReason = "R3", BodyRaw = "b3" }
+        };
+
+        var vm = new MessageDetailViewModel(messages, initialIndex: 0);
+        Assert.Equal("id-1", vm.CurrentMessage?.MessageId);
+        Assert.False(vm.CanGoPrevious);
+        Assert.True(vm.CanGoNext);
+        Assert.Equal("Message 1 of 3", vm.PositionDisplay);
+
+        // Advance to next
+        vm.Next();
+        Assert.Equal("id-2", vm.CurrentMessage?.MessageId);
+        Assert.True(vm.CanGoPrevious);
+        Assert.True(vm.CanGoNext);
+        Assert.Equal("Message 2 of 3", vm.PositionDisplay);
+
+        // Advance to last
+        vm.Next();
+        Assert.Equal("id-3", vm.CurrentMessage?.MessageId);
+        Assert.True(vm.CanGoPrevious);
+        Assert.False(vm.CanGoNext);
+
+        // Cannot go past last
+        vm.Next();
+        Assert.Equal("id-3", vm.CurrentMessage?.MessageId);
+
+        // Go back
+        vm.Previous();
+        Assert.Equal("id-2", vm.CurrentMessage?.MessageId);
+    }
+
+    [Fact]
+    public async Task MessageInspectorViewModel_Paging_IncrementsAndDecrementsPages()
+    {
+        var service = new AzureServiceBusMonitorService();
+        service.SetDemoMode(true);
+
+        var vm = new MessageInspectorViewModel(service)
+        {
+            PageSize = 10
+        };
+
+        var metric = new ServiceBusEntityMetric
+        {
+            Name = "orders-processing",
+            Kind = EntityKind.Queue,
+            DeadLetterMessageCount = 28
+        };
+
+        await vm.OpenForEntityAsync(metric);
+
+        Assert.Equal(1, vm.CurrentPage);
+        Assert.Equal(10, vm.Messages.Count);
+        Assert.False(vm.HasPreviousPage);
+        Assert.True(vm.HasNextPage);
+
+        // Advance to page 2
+        await vm.NextPageAsync();
+        Assert.Equal(2, vm.CurrentPage);
+        Assert.Equal(10, vm.Messages.Count);
+        Assert.True(vm.HasPreviousPage);
+        Assert.True(vm.HasNextPage);
+
+        // Advance to page 3 (remaining 8 messages)
+        await vm.NextPageAsync();
+        Assert.Equal(3, vm.CurrentPage);
+        Assert.Equal(8, vm.Messages.Count);
+        Assert.True(vm.HasPreviousPage);
+        Assert.False(vm.HasNextPage); // No more full pages
+
+        // Go back to page 2
+        await vm.PreviousPageAsync();
+        Assert.Equal(2, vm.CurrentPage);
+        Assert.Equal(10, vm.Messages.Count);
+    }
+
+    [Fact]
+    public void AppSettings_MessageDetailWindowBounds_StoresAndRetrieves()
+    {
+        var settings = new AppSettings
+        {
+            MessageDetailWindowWidth = 920,
+            MessageDetailWindowHeight = 740,
+            MessageDetailWindowX = 150,
+            MessageDetailWindowY = 220
+        };
+
+        Assert.Equal(920, settings.MessageDetailWindowWidth);
+        Assert.Equal(740, settings.MessageDetailWindowHeight);
+        Assert.Equal(150, settings.MessageDetailWindowX);
+        Assert.Equal(220, settings.MessageDetailWindowY);
+    }
 }
+

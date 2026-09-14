@@ -1,0 +1,238 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:AzureDeadLetterMonitor.ViewModels"
+        xmlns:models="using:AzureDeadLetterMonitor.Models"
+        mc:Ignorable="d" d:DesignWidth="850" d:DesignHeight="680"
+        x:Class="AzureDeadLetterMonitor.Views.MessageDetailWindow"
+        x:DataType="vm:MessageDetailViewModel"
+        Title="{Binding CurrentMessage.MessageId, StringFormat='Message Details - {0}'}"
+        Width="880" Height="700"
+        MinWidth="700" MinHeight="500"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource ThemeBackgroundBrush}">
+
+    <Window.KeyBindings>
+        <KeyBinding Gesture="Escape" Command="{Binding CloseCommand}" />
+    </Window.KeyBindings>
+
+    <Grid RowDefinitions="Auto,*,Auto" Margin="24">
+        <!-- Top Toolbar / Navigation -->
+        <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Margin="0,0,0,16">
+            <!-- Window Title -->
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                <TextBlock Text="✉️" FontSize="20"/>
+                <TextBlock Text="Dead Letter Message Detail" 
+                           FontSize="18" 
+                           FontWeight="Bold" 
+                           Foreground="{DynamicResource ThemeTextPrimaryBrush}"/>
+            </StackPanel>
+
+            <!-- Navigation Controls: Previous / Next -->
+            <StackPanel Grid.Column="1" 
+                        Orientation="Horizontal" 
+                        Spacing="10" 
+                        HorizontalAlignment="Center" 
+                        VerticalAlignment="Center">
+                <Button Content="◀ Previous" 
+                        Command="{Binding PreviousCommand}" 
+                        IsEnabled="{Binding CanGoPrevious}"
+                        Padding="12,6" 
+                        CornerRadius="6" 
+                        FontSize="12" 
+                        FontWeight="SemiBold"/>
+
+                <Border Background="{DynamicResource ThemeInputBackgroundBrush}" 
+                        BorderBrush="{DynamicResource ThemeCardBorderBrush}" 
+                        BorderThickness="1" 
+                        CornerRadius="6" 
+                        Padding="12,6">
+                    <TextBlock Text="{Binding PositionDisplay}" 
+                               FontSize="12" 
+                               FontWeight="Bold" 
+                               Foreground="{DynamicResource ThemeTextPrimaryBrush}"/>
+                </Border>
+
+                <Button Content="Next ▶" 
+                        Command="{Binding NextCommand}" 
+                        IsEnabled="{Binding CanGoNext}"
+                        Classes="ActionPrimary"
+                        Padding="12,6" 
+                        CornerRadius="6" 
+                        FontSize="12" 
+                        FontWeight="SemiBold"/>
+            </StackPanel>
+
+            <!-- Close Action -->
+            <Button Grid.Column="2" 
+                    Content="✕ Close (Esc)" 
+                    Command="{Binding CloseCommand}" 
+                    Padding="12,6" 
+                    CornerRadius="6" 
+                    FontSize="12"
+                    FontWeight="SemiBold"/>
+        </Grid>
+
+        <!-- Main Scrollable Content -->
+        <ScrollViewer Grid.Row="1">
+            <StackPanel Spacing="16" Margin="0,0,8,0">
+                <!-- Diagnostic Alert Card -->
+                <Border Background="{DynamicResource ThemeAlertRedBackgroundBrush}" 
+                        BorderBrush="{DynamicResource ThemeAlertRedBorderBrush}" 
+                        BorderThickness="1" 
+                        CornerRadius="8" 
+                        Padding="16">
+                    <StackPanel Spacing="8">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Text="🚨" FontSize="18"/>
+                            <TextBlock Text="Dead Letter Reason:" 
+                                       FontWeight="Bold" 
+                                       FontSize="14"
+                                       Foreground="{DynamicResource ThemeAlertRedBrush}"/>
+                            <TextBlock Text="{Binding CurrentMessage.DeadLetterReason}" 
+                                       FontWeight="ExtraBold" 
+                                       FontSize="14"
+                                       Foreground="{DynamicResource ThemeAlertRedBrush}"/>
+                        </StackPanel>
+
+                        <TextBlock Text="Error Description:" 
+                                   FontWeight="SemiBold" 
+                                   FontSize="12" 
+                                   Foreground="{DynamicResource ThemeTextSecondaryBrush}"/>
+                        <TextBlock Text="{Binding CurrentMessage.DeadLetterErrorDescription}" 
+                                   FontSize="12" 
+                                   Foreground="{DynamicResource ThemeTextPrimaryBrush}" 
+                                   TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Core Metadata Table -->
+                <Border Background="{DynamicResource ThemeCardBackgroundBrush}" 
+                        BorderBrush="{DynamicResource ThemeCardBorderBrush}" 
+                        BorderThickness="1" 
+                        CornerRadius="8" 
+                        Padding="16">
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="Broker Metadata &amp; Headers" 
+                                   FontWeight="Bold" 
+                                   FontSize="13" 
+                                   Foreground="{DynamicResource ThemeTextPrimaryBrush}"/>
+
+                        <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto">
+                            <!-- Message ID -->
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Message ID:" FontWeight="SemiBold" FontSize="12" Margin="0,4,16,4"/>
+                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding CurrentMessage.MessageId}" FontSize="12" TextWrapping="Wrap" Margin="0,4"/>
+
+                            <!-- Sequence Number -->
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Sequence Number:" FontWeight="SemiBold" FontSize="12" Margin="0,4,16,4"/>
+                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding CurrentMessage.SequenceNumber}" FontSize="12" Margin="0,4"/>
+
+                            <!-- Enqueued Time -->
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Enqueued Time:" FontWeight="SemiBold" FontSize="12" Margin="0,4,16,4"/>
+                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding CurrentMessage.FormattedEnqueuedTime}" FontSize="12" Margin="0,4"/>
+
+                            <!-- Delivery Count / Tries -->
+                            <TextBlock Grid.Row="3" Grid.Column="0" Text="Delivery Attempts:" FontWeight="SemiBold" FontSize="12" Margin="0,4,16,4"/>
+                            <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding CurrentMessage.DeliveryCount}" FontSize="12" FontWeight="Bold" Margin="0,4"/>
+
+                            <!-- Content Type -->
+                            <TextBlock Grid.Row="4" Grid.Column="0" Text="Content Type:" FontWeight="SemiBold" FontSize="12" Margin="0,4,16,4"/>
+                            <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding CurrentMessage.ContentType, TargetNullValue='(none)'}" FontSize="12" Margin="0,4"/>
+
+                            <!-- Correlation ID -->
+                            <TextBlock Grid.Row="5" Grid.Column="0" Text="Correlation ID:" FontWeight="SemiBold" FontSize="12" Margin="0,4,16,4"/>
+                            <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding CurrentMessage.CorrelationId, TargetNullValue='(none)'}" FontSize="12" Margin="0,4"/>
+
+                            <!-- Subject -->
+                            <TextBlock Grid.Row="6" Grid.Column="0" Text="Subject:" FontWeight="SemiBold" FontSize="12" Margin="0,4,16,4"/>
+                            <TextBlock Grid.Row="6" Grid.Column="1" Text="{Binding CurrentMessage.Subject, TargetNullValue='(none)'}" FontSize="12" Margin="0,4"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- Application Properties (if any) -->
+                <Border Background="{DynamicResource ThemeCardBackgroundBrush}" 
+                        BorderBrush="{DynamicResource ThemeCardBorderBrush}" 
+                        BorderThickness="1" 
+                        CornerRadius="8" 
+                        Padding="16"
+                        IsVisible="{Binding CurrentMessage.ApplicationPropertiesList.Count}">
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="Custom Application Properties" 
+                                   FontWeight="Bold" 
+                                   FontSize="13" 
+                                   Foreground="{DynamicResource ThemeTextPrimaryBrush}"/>
+
+                        <ItemsControl ItemsSource="{Binding CurrentMessage.ApplicationPropertiesList}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid ColumnDefinitions="160,*" Margin="0,3">
+                                        <TextBlock Grid.Column="0" Text="{Binding Key}" FontWeight="SemiBold" FontSize="12" Foreground="{DynamicResource ThemeAccentBrush}"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding Value}" FontSize="12" TextWrapping="Wrap"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <!-- Message Payload Body -->
+                <Border Background="{DynamicResource ThemeCardBackgroundBrush}" 
+                        BorderBrush="{DynamicResource ThemeCardBorderBrush}" 
+                        BorderThickness="1" 
+                        CornerRadius="8" 
+                        Padding="16">
+                    <StackPanel Spacing="10">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <TextBlock Text="📦 Message Payload Body" FontWeight="Bold" FontSize="13"/>
+                                <TextBlock Text="(Formatted JSON / Raw Text)" FontSize="11" Foreground="{DynamicResource ThemeTextSecondaryBrush}" VerticalAlignment="Center"/>
+                            </StackPanel>
+
+                            <Button Grid.Column="1" 
+                                    Content="{Binding CopyStatusText}" 
+                                    Command="{Binding CopyBodyCommand}" 
+                                    Classes="ActionPrimary"
+                                    Padding="12,5" 
+                                    FontSize="11"
+                                    CornerRadius="6"/>
+                        </Grid>
+
+                        <Border Background="{DynamicResource ThemeInputBackgroundBrush}" 
+                                BorderBrush="{DynamicResource ThemeInputBorderBrush}" 
+                                BorderThickness="1" 
+                                CornerRadius="6" 
+                                Padding="12">
+                            <TextBox Text="{Binding CurrentMessage.FormattedBody}" 
+                                     IsReadOnly="True" 
+                                     FontFamily="Monospace" 
+                                     FontSize="12" 
+                                     AcceptsReturn="True" 
+                                     TextWrapping="Wrap" 
+                                     Background="Transparent" 
+                                     BorderThickness="0" 
+                                     MinHeight="140"
+                                     MaxHeight="380"/>
+                        </Border>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Bottom Footer -->
+        <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="0,14,0,0">
+            <TextBlock Grid.Column="0" 
+                       Text="⚠️ Peeking messages is non-destructive and does not dequeue or modify DLQ state." 
+                       FontSize="11" 
+                       Foreground="{DynamicResource ThemeTextMutedBrush}" 
+                       VerticalAlignment="Center"/>
+            <Button Grid.Column="1" 
+                    Content="Close" 
+                    Command="{Binding CloseCommand}" 
+                    Padding="18,8" 
+                    CornerRadius="6" 
+                    FontSize="12"/>
+        </Grid>
+    </Grid>
+</Window>
