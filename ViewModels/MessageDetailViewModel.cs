@@ -23,6 +23,9 @@ public partial class MessageDetailViewModel : ViewModelBase
     [ObservableProperty]
     private string _copyStatusText = "Copy Body";
 
+    [ObservableProperty]
+    private bool _showKeyboardHints = true;
+
     public int TotalCount => _messages.Count;
 
     public string PositionDisplay => _messages.Count > 0 

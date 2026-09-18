@@ -438,5 +438,67 @@ public class MonitorTests
         vm.CloseMenuCommand.Execute(null);
         Assert.False(vm.IsThemeSubMenuOpen);
     }
+
+    [Fact]
+    public void AppSettings_ShowKeyboardHints_DefaultsToTrue()
+    {
+        var settings = new AppSettings();
+        Assert.True(settings.ShowKeyboardHints);
+    }
+
+    [Fact]
+    public void MainWindowViewModel_ShowKeyboardHints_TogglesStatusTextAndSyncsInspector()
+    {
+        var vm = new MainWindowViewModel();
+        Assert.True(vm.ShowKeyboardHints);
+        Assert.Equal("ON", vm.KeyboardHintsStatusText);
+        Assert.True(vm.Inspector.ShowKeyboardHints);
+
+        vm.ToggleKeyboardHintsCommand.Execute(null);
+        Assert.False(vm.ShowKeyboardHints);
+        Assert.Equal("OFF", vm.KeyboardHintsStatusText);
+        Assert.False(vm.Inspector.ShowKeyboardHints);
+
+        vm.ToggleKeyboardHintsCommand.Execute(null);
+        Assert.True(vm.ShowKeyboardHints);
+        Assert.Equal("ON", vm.KeyboardHintsStatusText);
+        Assert.True(vm.Inspector.ShowKeyboardHints);
+    }
+
+    [Fact]
+    public void MessageDetailViewModel_ShowKeyboardHints_ReflectsAssignedState()
+    {
+        var detailVm = new MessageDetailViewModel(new System.Collections.Generic.List<DeadLetterMessageDetail>())
+        {
+            ShowKeyboardHints = false
+        };
+        Assert.False(detailVm.ShowKeyboardHints);
+
+        detailVm.ShowKeyboardHints = true;
+        Assert.True(detailVm.ShowKeyboardHints);
+    }
+
+    [Fact]
+    public void AppSettings_IsDemoMode_DefaultsToFalse()
+    {
+        var settings = new AppSettings();
+        Assert.False(settings.IsDemoMode);
+    }
+
+    [Fact]
+    public void MainWindowViewModel_ToggleDemoMode_TogglesStateAndStatusText()
+    {
+        var vm = new MainWindowViewModel();
+        var initial = vm.IsDemoMode;
+
+        vm.ToggleDemoModeCommand.Execute(null);
+        Assert.Equal(!initial, vm.IsDemoMode);
+        Assert.Equal(!initial ? "ON" : "OFF", vm.DemoModeStatusText);
+
+        vm.ToggleDemoModeCommand.Execute(null);
+        Assert.Equal(initial, vm.IsDemoMode);
+        Assert.Equal(initial ? "ON" : "OFF", vm.DemoModeStatusText);
+    }
 }
+
 

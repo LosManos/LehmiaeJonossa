@@ -17,7 +17,7 @@
         <KeyBinding Gesture="Escape" Command="{Binding CloseCommand}" />
     </Window.KeyBindings>
 
-    <Grid RowDefinitions="Auto,*,Auto" Margin="24">
+    <Grid RowDefinitions="Auto,*,Auto,Auto" Margin="24,24,24,14">
         <!-- Top Toolbar / Navigation -->
         <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Margin="0,0,0,16">
             <!-- Window Title -->
@@ -35,13 +35,17 @@
                         Spacing="10" 
                         HorizontalAlignment="Center" 
                         VerticalAlignment="Center">
-                <Button Content="◀ Previous" 
-                        Command="{Binding PreviousCommand}" 
+                <Button Command="{Binding PreviousCommand}" 
                         IsEnabled="{Binding CanGoPrevious}"
+                        ToolTip.Tip="Previous Message (Alt+P or ⌘←)"
                         Padding="12,6" 
                         CornerRadius="6" 
                         FontSize="12" 
-                        FontWeight="SemiBold"/>
+                        FontWeight="SemiBold">
+                    <TextBlock>
+                        <Run>◀ </Run><Run TextDecorations="Underline">P</Run><Run>revious</Run>
+                    </TextBlock>
+                </Button>
 
                 <Border Background="{DynamicResource ThemeInputBackgroundBrush}" 
                         BorderBrush="{DynamicResource ThemeCardBorderBrush}" 
@@ -54,24 +58,32 @@
                                Foreground="{DynamicResource ThemeTextPrimaryBrush}"/>
                 </Border>
 
-                <Button Content="Next ▶" 
-                        Command="{Binding NextCommand}" 
+                <Button Command="{Binding NextCommand}" 
                         IsEnabled="{Binding CanGoNext}"
+                        ToolTip.Tip="Next Message (Alt+N or ⌘→)"
                         Classes="ActionPrimary"
                         Padding="12,6" 
                         CornerRadius="6" 
                         FontSize="12" 
-                        FontWeight="SemiBold"/>
+                        FontWeight="SemiBold">
+                    <TextBlock>
+                        <Run TextDecorations="Underline">N</Run><Run>ext ▶</Run>
+                    </TextBlock>
+                </Button>
             </StackPanel>
 
             <!-- Close Action -->
-            <Button Grid.Column="2" 
-                    Content="✕ Close (Esc)" 
+            <Button Grid.Column="2"
                     Command="{Binding CloseCommand}" 
+                    ToolTip.Tip="Close (Esc or Alt+C)"
                     Padding="12,6" 
                     CornerRadius="6" 
                     FontSize="12"
-                    FontWeight="SemiBold"/>
+                    FontWeight="SemiBold">
+                <TextBlock>
+                    <Run>✕ </Run><Run TextDecorations="Underline">C</Run><Run>lose (Esc)</Run>
+                </TextBlock>
+            </Button>
         </Grid>
 
         <!-- Main Scrollable Content -->
@@ -191,12 +203,19 @@
                             </StackPanel>
 
                             <Button Grid.Column="1" 
-                                    Content="{Binding CopyStatusText}" 
                                     Command="{Binding CopyBodyCommand}" 
+                                    ToolTip.Tip="Copy Body to Clipboard (Alt+B or ⌘C)"
                                     Classes="ActionPrimary"
                                     Padding="12,5" 
                                     FontSize="11"
-                                    CornerRadius="6"/>
+                                    CornerRadius="6">
+                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                    <TextBlock Text="📋" FontSize="11" VerticalAlignment="Center"/>
+                                    <TextBlock VerticalAlignment="Center">
+                                        <Run>Copy </Run><Run TextDecorations="Underline">B</Run><Run>ody</Run>
+                                    </TextBlock>
+                                </StackPanel>
+                            </Button>
                         </Grid>
 
                         <Border Background="{DynamicResource ThemeInputBackgroundBrush}" 
@@ -228,11 +247,41 @@
                        Foreground="{DynamicResource ThemeTextMutedBrush}" 
                        VerticalAlignment="Center"/>
             <Button Grid.Column="1" 
-                    Content="Close" 
                     Command="{Binding CloseCommand}" 
+                    ToolTip.Tip="Close (Esc or Alt+C)"
                     Padding="18,8" 
                     CornerRadius="6" 
-                    FontSize="12"/>
+                    FontSize="12">
+                <TextBlock>
+                    <Run TextDecorations="Underline">C</Run><Run>lose</Run>
+                </TextBlock>
+            </Button>
         </Grid>
+
+        <!-- Keyboard Shortcuts Footer (Toggleable) -->
+        <Border Grid.Row="3" 
+                IsVisible="{Binding ShowKeyboardHints}"
+                Background="{DynamicResource ThemeHeaderBackgroundBrush}"
+                BorderBrush="{DynamicResource ThemeCardBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="6"
+                Padding="16,8"
+                Margin="0,14,0,0">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <TextBlock Text="⌨️" FontSize="13" VerticalAlignment="Center"/>
+                    <TextBlock Text="Shortcuts:" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource ThemeTextSecondaryBrush}" VerticalAlignment="Center"/>
+                    <TextBlock Text="⌘← / ⌘→ or ⌘↑ / ⌘↓: Prev / Next Message  •  Alt+P / Alt+N: Prev / Next  •  Alt+B: Copy Body  •  Esc: Close" 
+                               FontSize="11" 
+                               Foreground="{DynamicResource ThemeTextMutedBrush}" 
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+                <TextBlock Grid.Column="2" 
+                           Text="Esc to Close" 
+                           FontSize="10" 
+                           Foreground="{DynamicResource ThemeTextMutedBrush}" 
+                           VerticalAlignment="Center"/>
+            </Grid>
+        </Border>
     </Grid>
 </Window>

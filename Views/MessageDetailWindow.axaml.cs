@@ -20,6 +20,7 @@ public partial class MessageDetailWindow : Window
     public MessageDetailWindow()
     {
         InitializeComponent();
+        AddHandler(InputElement.KeyDownEvent, OnMessageDetailKeyDown, RoutingStrategies.Tunnel);
         RestoreSavedBounds();
         Opened += OnWindowOpened;
         PositionChanged += OnPositionChanged;
@@ -141,13 +142,53 @@ public partial class MessageDetailWindow : Window
         }
     }
 
-    protected override void OnKeyDown(KeyEventArgs e)
+    private void OnMessageDetailKeyDown(object? sender, KeyEventArgs e)
     {
-        base.OnKeyDown(e);
-        if (e.Key == Key.Escape)
+        var vm = DataContext as MessageDetailViewModel;
+        if (vm == null) return;
+
+        bool isCmdOrCtrl = e.KeyModifiers.HasFlag(KeyModifiers.Meta) || e.KeyModifiers.HasFlag(KeyModifiers.Control);
+        bool isAlt = e.KeyModifiers.HasFlag(KeyModifiers.Alt);
+
+        // 1. Close: Esc or Alt+C
+        if (e.Key == Key.Escape || (isAlt && e.Key == Key.C))
         {
             Close();
             e.Handled = true;
+            return;
+        }
+
+        // 2. Previous Message: Cmd+Left, Cmd+Up, Alt+P
+        if ((isCmdOrCtrl && (e.Key == Key.Left || e.Key == Key.Up)) || (isAlt && e.Key == Key.P))
+        {
+            if (vm.PreviousCommand.CanExecute(null))
+            {
+                vm.PreviousCommand.Execute(null);
+                e.Handled = true;
+                return;
+            }
+        }
+
+        // 3. Next Message: Cmd+Right, Cmd+Down, Alt+N
+        if ((isCmdOrCtrl && (e.Key == Key.Right || e.Key == Key.Down)) || (isAlt && e.Key == Key.N))
+        {
+            if (vm.NextCommand.CanExecute(null))
+            {
+                vm.NextCommand.Execute(null);
+                e.Handled = true;
+                return;
+            }
+        }
+
+        // 4. Copy Body: Alt+B
+        if (isAlt && e.Key == Key.B)
+        {
+            if (vm.CopyBodyCommand.CanExecute(null))
+            {
+                vm.CopyBodyCommand.Execute(null);
+                e.Handled = true;
+                return;
+            }
         }
     }
 

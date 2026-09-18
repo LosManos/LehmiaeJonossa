@@ -12,3 +12,10 @@
 - **MVVM Framework**: Avalonia UI using CommunityToolkit.Mvvm.
 - **Service Layer**: Keep Azure SDK interaction isolated in `Services/` (e.g., `AzureServiceBusMonitorService`).
 - **Authentication**: Rely on `Azure.Identity` with priority given to Azure CLI and developer credentials locally, and Managed Identity when deployed.
+
+### 3. Keyboard Navigation & Accessibility
+- **100% Keyboard Navigable**: All features, dialogs, drawers, and inspection tools must be fully operable by keyboard alone.
+- **Access Key Mnemonics (Windows Standard)**: Key actions and form labels must provide `Alt+{letter}` access shortcuts. The exact shortcut letter must be visibly underlined (using typographical `<Run TextDecorations="Underline">` — never literal underscore characters in text).
+- **Shortcut Hints & Overlays**: Unlabeled icon buttons must provide compact shortcut hint badges when keyboard hints are enabled. Windows must display context-appropriate shortcut footers, controllable via the user toggle.
+- **Cross-Platform Parity**: Shortcut handling must intercept tunneling key events to guarantee identical behavior across macOS (handling Option/Cmd properly) and Windows (handling Alt/Ctrl).
+

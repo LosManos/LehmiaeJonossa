@@ -22,4 +22,6 @@ public class AppSettings
     public double? MessageDetailWindowHeight { get; set; }
     public int? MessageDetailWindowX { get; set; }
     public int? MessageDetailWindowY { get; set; }
+    public bool ShowKeyboardHints { get; set; } = true;
+    public bool IsDemoMode { get; set; } = false;
 }

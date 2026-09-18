@@ -23,28 +23,48 @@ public partial class MainWindow : Window
 
     private void OnMainWindowKeyDown(object? sender, KeyEventArgs e)
     {
+        var vm = DataContext as MainWindowViewModel;
+        if (vm == null) return;
+
         bool isShift = e.KeyModifiers.HasFlag(KeyModifiers.Shift) &&
                        !e.KeyModifiers.HasFlag(KeyModifiers.Control) &&
                        !e.KeyModifiers.HasFlag(KeyModifiers.Meta) &&
                        !e.KeyModifiers.HasFlag(KeyModifiers.Alt);
 
-        // Shortcut to activate/toggle hamburger menu: Shift + Space
+        bool isCmdOrCtrl = e.KeyModifiers.HasFlag(KeyModifiers.Meta) || e.KeyModifiers.HasFlag(KeyModifiers.Control);
+        bool isAlt = e.KeyModifiers.HasFlag(KeyModifiers.Alt);
+
+        // 1. REFRESH / RESET: F5, Cmd+R, Ctrl+R, Alt+R
+        if (e.Key == Key.F5 || (isCmdOrCtrl && e.Key == Key.R) || (isAlt && e.Key == Key.R))
+        {
+            if (vm.RefreshCommand.CanExecute(null))
+            {
+                vm.RefreshCommand.Execute(null);
+                e.Handled = true;
+                return;
+            }
+        }
+
+        // 2. TOGGLE MENU: Shift+Space
         if (isShift && e.Key == Key.Space)
         {
             _isShiftSpaceHandled = true;
             e.Handled = true;
-
-            if (DataContext is MainWindowViewModel vm)
-            {
-                vm.ToggleMenu();
-            }
+            vm.ToggleMenu();
             return;
         }
 
-        // Close menu on Escape if open
+        // 3. ESCAPE KEY
         if (e.Key == Key.Escape)
         {
-            if (DataContext is MainWindowViewModel vm && vm.IsMenuOpen)
+            if (vm.IsAddingNamespace)
+            {
+                vm.CancelAddNamespace();
+                e.Handled = true;
+                return;
+            }
+
+            if (vm.IsMenuOpen)
             {
                 vm.CloseMenu();
                 e.Handled = true;
@@ -52,8 +72,28 @@ public partial class MainWindow : Window
             }
         }
 
-        // Keyboard navigation when hamburger menu is open
-        if (DataContext is MainWindowViewModel vmMenu && vmMenu.IsMenuOpen)
+        // 4. ADD NAMESPACE INLINE BAR SHORTCUTS (Enter / Alt+S to save, Alt+C to cancel)
+        if (vm.IsAddingNamespace)
+        {
+            if (e.Key == Key.Enter || (isAlt && e.Key == Key.S))
+            {
+                if (vm.ConfirmAddNamespaceCommand.CanExecute(null))
+                {
+                    vm.ConfirmAddNamespaceCommand.Execute(null);
+                    e.Handled = true;
+                    return;
+                }
+            }
+            if (isAlt && e.Key == Key.C)
+            {
+                vm.CancelAddNamespace();
+                e.Handled = true;
+                return;
+            }
+        }
+
+        // 5. HAMBURGER MENU NAVIGATION & ACTIONS WHEN OPEN
+        if (vm.IsMenuOpen)
         {
             if (e.Key is Key.Down or Key.Up)
             {
@@ -69,9 +109,9 @@ public partial class MainWindow : Window
                 var focused = FocusManager?.GetFocusedElement() as Visual;
                 if (focused is Button btn && btn.Name == "MenuThemeButton")
                 {
-                    if (!vmMenu.IsThemeSubMenuOpen)
+                    if (!vm.IsThemeSubMenuOpen)
                     {
-                        vmMenu.IsThemeSubMenuOpen = true;
+                        vm.IsThemeSubMenuOpen = true;
                     }
                     Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                     {
@@ -88,7 +128,7 @@ public partial class MainWindow : Window
                 var focused = FocusManager?.GetFocusedElement() as Visual;
                 if (focused is Button btn && (btn.Name?.StartsWith("MenuTheme") == true && btn.Name != "MenuThemeButton"))
                 {
-                    vmMenu.IsThemeSubMenuOpen = false;
+                    vm.IsThemeSubMenuOpen = false;
                     var themeBtn = this.FindControl<Button>("MenuThemeButton");
                     themeBtn?.Focus();
                     e.Handled = true;
@@ -96,21 +136,128 @@ public partial class MainWindow : Window
                 }
             }
 
-            // Demo mode toggle with Space when MenuDemoButton is focused
             if (e.Key == Key.Space)
             {
                 var focused = FocusManager?.GetFocusedElement() as Visual;
-                if (focused is Button btn && btn.Name == "MenuDemoButton")
+                if (focused is Button btn)
                 {
-                    vmMenu.ToggleDemoMode();
-                    e.Handled = true;
-                    return;
+                    if (btn.Name == "MenuDemoButton")
+                    {
+                        vm.ToggleDemoMode();
+                        e.Handled = true;
+                        return;
+                    }
+                    if (btn.Name == "MenuKeyboardHintsButton")
+                    {
+                        vm.ToggleKeyboardHints();
+                        e.Handled = true;
+                        return;
+                    }
+                }
+            }
+
+            if (isAlt)
+            {
+                switch (e.Key)
+                {
+                    case Key.A:
+                        vm.OpenAccountDialog();
+                        e.Handled = true;
+                        return;
+                    case Key.D:
+                        vm.ToggleDemoMode();
+                        e.Handled = true;
+                        return;
+                    case Key.T:
+                        vm.ToggleThemeSubMenu();
+                        e.Handled = true;
+                        return;
+                    case Key.K:
+                    case Key.H:
+                        vm.ToggleKeyboardHints();
+                        e.Handled = true;
+                        return;
+                    case Key.L when vm.IsThemeSubMenuOpen:
+                        vm.SetTheme(Models.AppTheme.Light);
+                        e.Handled = true;
+                        return;
+                    case Key.G when vm.IsThemeSubMenuOpen:
+                        vm.SetTheme(Models.AppTheme.Lego);
+                        e.Handled = true;
+                        return;
+                    case Key.B when vm.IsThemeSubMenuOpen:
+                        vm.SetTheme(Models.AppTheme.Barbie);
+                        e.Handled = true;
+                        return;
+                    case Key.C:
+                        vm.CloseMenu();
+                        e.Handled = true;
+                        return;
                 }
             }
         }
 
-        bool isCmdOrCtrl = e.KeyModifiers.HasFlag(KeyModifiers.Meta) || e.KeyModifiers.HasFlag(KeyModifiers.Control);
+        // 6. GLOBAL ALT SHORTCUTS (When menu is NOT open)
+        if (isAlt && !vm.IsMenuOpen)
+        {
+            switch (e.Key)
+            {
+                case Key.N:
+                    var nsCombo = this.FindControl<ComboBox>("NamespaceComboBox");
+                    nsCombo?.Focus();
+                    e.Handled = true;
+                    return;
 
+                case Key.A:
+                    vm.ShowAddNamespace();
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                    {
+                        var txtBox = this.FindControl<TextBox>("NewNamespaceTextBox");
+                        txtBox?.Focus();
+                    });
+                    e.Handled = true;
+                    return;
+
+                case Key.D:
+                    if (vm.DiscoverNamespacesCommand.CanExecute(null))
+                    {
+                        vm.DiscoverNamespacesCommand.Execute(null);
+                        e.Handled = true;
+                    }
+                    return;
+
+                case Key.T:
+                    vm.ToggleAutoRefresh();
+                    e.Handled = true;
+                    return;
+
+                case Key.S:
+                    var searchBox = this.FindControl<TextBox>("SearchTextBox");
+                    searchBox?.Focus();
+                    e.Handled = true;
+                    return;
+
+                case Key.F:
+                    var filterBox = this.FindControl<ComboBox>("FilterComboBox");
+                    filterBox?.Focus();
+                    e.Handled = true;
+                    return;
+
+                case Key.E:
+                    var grid = this.FindControl<DataGrid>("EntitiesDataGrid");
+                    grid?.Focus();
+                    e.Handled = true;
+                    return;
+
+                case Key.K:
+                case Key.H:
+                    vm.ToggleKeyboardHints();
+                    e.Handled = true;
+                    return;
+            }
+        }
+
+        // 7. CMD/CTRL + 1-9 FOR HOTLIST ITEMS
         if (isCmdOrCtrl)
         {
             int? targetNumber = e.Key switch
@@ -172,6 +319,7 @@ public partial class MainWindow : Window
             AddIfVisible("MenuThemeBarbieButton");
         }
 
+        AddIfVisible("MenuKeyboardHintsButton");
         AddIfVisible("MenuCloseButton");
 
         if (menuButtons.Count == 0) return false;
@@ -326,6 +474,11 @@ public partial class MainWindow : Window
 
     private void OnOpenInspectorWindowRequested(MessageInspectorViewModel inspectorVm)
     {
+        if (DataContext is MainWindowViewModel vm)
+        {
+            inspectorVm.ShowKeyboardHints = vm.ShowKeyboardHints;
+        }
+
         if (_activeInspectorWindow != null)
         {
             _activeInspectorWindow.Activate();

@@ -90,21 +90,24 @@
                 <!-- Auth Mode Selector Card -->
                 <Border Classes="Card" Padding="16,14">
                     <StackPanel Spacing="10">
-                        <TextBlock Text="AUTHENTICATION METHOD" 
-                                   FontSize="11" 
+                        <TextBlock FontSize="11" 
                                    FontWeight="Bold" 
                                    Foreground="{DynamicResource ThemeTextMutedBrush}"
-                                   LetterSpacing="0.8"/>
+                                   LetterSpacing="0.8">
+                            <Run TextDecorations="Underline">A</Run><Run>UTHENTICATION METHOD</Run>
+                        </TextBlock>
 
-                        <ComboBox ItemsSource="{Binding AvailableAuthModes}" 
+                        <ComboBox x:Name="AuthModeComboBox"
+                                  ItemsSource="{Binding AvailableAuthModes}" 
                                   SelectedItem="{Binding SelectedAuthMode}"
+                                  ToolTip.Tip="Authentication Mode (Alt+A)"
                                   HorizontalAlignment="Stretch"
                                   Height="36"
                                   CornerRadius="6"/>
 
                         <TextBlock Text="DefaultAzureCredential resolves Azure CLI credentials locally and Managed Identity when deployed to Azure." 
                                    FontSize="11" 
-                                   Foreground="{DynamicResource ThemeTextMutedBrush}"
+                                   Foreground="{DynamicResource ThemeTextMutedBrush}" 
                                    TextWrapping="Wrap"/>
                     </StackPanel>
                 </Border>
@@ -114,11 +117,18 @@
         <!-- FOOTER ACTIONS -->
         <Border Grid.Row="2" Margin="0,16,0,0" Padding="0,8,0,0" BorderBrush="{DynamicResource ThemeCardBorderBrush}" BorderThickness="0,1,0,0">
             <Grid ColumnDefinitions="*,Auto">
-                <TextBlock Grid.Column="0" Text="Press Esc to close" FontSize="11" Foreground="{DynamicResource ThemeTextMutedBrush}" VerticalAlignment="Center"/>
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                    <TextBlock Text="⌨️" FontSize="12" VerticalAlignment="Center"/>
+                    <TextBlock Text="Shortcuts: ↑/↓: Select Mode  •  Enter / Esc / Alt+D: Close" FontSize="11" Foreground="{DynamicResource ThemeTextMutedBrush}" VerticalAlignment="Center"/>
+                </StackPanel>
                 <Button Grid.Column="1" 
-                        Content="Done" 
                         Classes="ActionPrimary" 
-                        Click="OnCloseClicked"/>
+                        ToolTip.Tip="Done (Enter, Esc, or Alt+D)"
+                        Click="OnCloseClicked">
+                    <TextBlock>
+                        <Run TextDecorations="Underline">D</Run><Run>one</Run>
+                    </TextBlock>
+                </Button>
             </Grid>
         </Border>
     </Grid>

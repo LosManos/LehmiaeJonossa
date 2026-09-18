@@ -71,6 +71,9 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isThemeSubMenuOpen = false;
 
+    [ObservableProperty]
+    private bool _showKeyboardHints = true;
+
     // KPI Summary properties
     [ObservableProperty]
     private long _totalDeadLetterCount = 0;
@@ -148,8 +151,12 @@ public partial class MainWindowViewModel : ViewModelBase
             SelectedAuthMode = _settings.AuthMode;
             UserAssignedClientId = _settings.UserAssignedClientId;
             IsAutoRefreshEnabled = _settings.AutoRefreshEnabled;
+            ShowKeyboardHints = _settings.ShowKeyboardHints;
+            Inspector.ShowKeyboardHints = ShowKeyboardHints;
             _countdownSeconds = _settings.AutoRefreshSeconds;
             AutoRefreshCountdownText = $"{_countdownSeconds}s";
+            IsDemoMode = _settings.IsDemoMode;
+            OnPropertyChanged(nameof(DemoModeStatusText));
 
             if (IsAutoRefreshEnabled)
             {
@@ -162,13 +169,16 @@ public partial class MainWindowViewModel : ViewModelBase
                             !n.Equals("sb-staging.servicebus.windows.net", StringComparison.OrdinalIgnoreCase))
                 .ToList();
 
-            // Auto-discover live Azure Service Bus namespaces
-            var discovered = await _monitorService.DiscoverNamespacesAsync();
-            foreach (var ns in discovered)
+            // Auto-discover live Azure Service Bus namespaces if not in demo mode
+            if (!IsDemoMode)
             {
-                if (!cleanConfigured.Contains(ns, StringComparer.OrdinalIgnoreCase))
+                var discovered = await _monitorService.DiscoverNamespacesAsync();
+                foreach (var ns in discovered)
                 {
-                    cleanConfigured.Add(ns);
+                    if (!cleanConfigured.Contains(ns, StringComparer.OrdinalIgnoreCase))
+                    {
+                        cleanConfigured.Add(ns);
+                    }
                 }
             }
 
@@ -193,7 +203,14 @@ public partial class MainWindowViewModel : ViewModelBase
             _settings.SelectedNamespace = SelectedNamespace;
             _ = _configService.SaveSettingsAsync(_settings);
 
-            if (!string.IsNullOrWhiteSpace(SelectedNamespace))
+            if (IsDemoMode)
+            {
+                _monitorService.SetDemoMode(true);
+                AuthStatus = _monitorService.AuthStatusMessage;
+                AccountIdentity = _monitorService.CurrentAccountIdentity;
+                await RefreshMetricsAsync();
+            }
+            else if (!string.IsNullOrWhiteSpace(SelectedNamespace))
             {
                 await ConnectAndRefreshAsync();
             }
@@ -201,7 +218,11 @@ public partial class MainWindowViewModel : ViewModelBase
             {
                 _monitorService.SetDemoMode(true);
                 IsDemoMode = true;
+                _settings.IsDemoMode = true;
+                _ = _configService.SaveSettingsAsync(_settings);
                 AuthStatus = "No namespace configured (Demo Mode)";
+                AccountIdentity = _monitorService.CurrentAccountIdentity;
+                OnPropertyChanged(nameof(DemoModeStatusText));
                 await RefreshMetricsAsync();
             }
         }
@@ -210,6 +231,9 @@ public partial class MainWindowViewModel : ViewModelBase
             StatusMessage = $"Init warning: {ex.Message}";
             _monitorService.SetDemoMode(true);
             IsDemoMode = true;
+            _settings.IsDemoMode = true;
+            _ = _configService.SaveSettingsAsync(_settings);
+            OnPropertyChanged(nameof(DemoModeStatusText));
             await RefreshMetricsAsync();
         }
         finally
@@ -268,6 +292,9 @@ public partial class MainWindowViewModel : ViewModelBase
             AccountIdentity = _monitorService.CurrentAccountIdentity;
             IsConnected = _monitorService.IsConnected;
             IsDemoMode = _monitorService.IsDemoMode;
+            _settings.IsDemoMode = IsDemoMode;
+            _ = _configService.SaveSettingsAsync(_settings);
+            OnPropertyChanged(nameof(DemoModeStatusText));
             await RefreshMetricsAsync();
         }
         catch (Exception ex)
@@ -417,6 +444,7 @@ public partial class MainWindowViewModel : ViewModelBase
     public bool IsLegoThemeSelected => SelectedTheme == AppTheme.Lego;
     public bool IsBarbieThemeSelected => SelectedTheme == AppTheme.Barbie;
     public string DemoModeStatusText => IsDemoMode ? "ON" : "OFF";
+    public string KeyboardHintsStatusText => ShowKeyboardHints ? "ON" : "OFF";
 
     public void UpdateMessageDetailWindowBounds(double width, double height, int x, int y)
     {
@@ -431,8 +459,19 @@ public partial class MainWindowViewModel : ViewModelBase
     public async Task InspectEntityAsync(ServiceBusEntityMetric? entity)
     {
         if (entity == null) return;
+        Inspector.ShowKeyboardHints = ShowKeyboardHints;
         await Inspector.OpenForEntityAsync(entity);
         OpenInspectorWindowRequested?.Invoke(Inspector);
+    }
+
+    [RelayCommand]
+    public void ToggleKeyboardHints()
+    {
+        ShowKeyboardHints = !ShowKeyboardHints;
+        OnPropertyChanged(nameof(KeyboardHintsStatusText));
+        Inspector.ShowKeyboardHints = ShowKeyboardHints;
+        _settings.ShowKeyboardHints = ShowKeyboardHints;
+        _ = _configService.SaveSettingsAsync(_settings);
     }
 
     [RelayCommand]
@@ -472,6 +511,8 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         IsDemoMode = !IsDemoMode;
         OnPropertyChanged(nameof(DemoModeStatusText));
+        _settings.IsDemoMode = IsDemoMode;
+        _ = _configService.SaveSettingsAsync(_settings);
         _monitorService.SetDemoMode(IsDemoMode);
         AuthStatus = _monitorService.AuthStatusMessage;
         AccountIdentity = _monitorService.CurrentAccountIdentity;

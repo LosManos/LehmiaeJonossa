@@ -58,6 +58,9 @@ public partial class MessageInspectorViewModel : ViewModelBase
     [ObservableProperty]
     private bool _hasNextPage = false;
 
+    [ObservableProperty]
+    private bool _showKeyboardHints = true;
+
     public bool HasPreviousPage => CurrentPage > 1;
 
     public string PageInfoDisplay => $"Page {CurrentPage} • {Messages.Count} message{(Messages.Count == 1 ? "" : "s")} displayed";

@@ -30,12 +30,73 @@ A high-performance cross-platform desktop monitor built with **.NET 10** and **A
   - Instantly search by queue/topic name or filter by *All*, *Dead Letters Only*, or *Healthy Only*.
 - **⏱️ Auto-Refresh**:
   - Configurable countdown timer with instant manual refresh button and pause/resume toggle.
+- **⌨️ 100% Keyboard Navigable (Windows Standard Mnemonics & macOS / Cross-Platform Shortcuts)**:
+  - Accessible via Windows standard `Alt+{letter}` mnemonics with direct typographical underlining under the exact shortcut key (`<u>N</u>amespace`, `<u>R</u>efresh`, `<u>A</u>ccount`, `<u>D</u>emo Mode`, `<u>T</u>heme`, etc.).
+  - Unlabeled action buttons display compact shortcut badges (`Shift+Space` for Menu, `Alt+A` for Add namespace, `Alt+D` for Auto-discover, `Alt+T` for Timer pause/resume).
+  - Quick refresh via dual `F5` and `⌘R` / `Ctrl+R`.
+  - Arrow-key selection and `Cmd+Arrows` navigation throughout the Dead Letter Inspector and Message Detail windows.
+  - Context-aware shortcut footers in each window, toggleable on/off directly from the menu.
 - **💾 Local Configuration Persistence**:
-  - Configured namespaces and preferred themes saved in `~/.azure-dead-letter-monitor/config.json`.
+  - Configured namespaces, preferred themes, keyboard hint preferences, and Demo Mode state saved in `~/.azure-dead-letter-monitor/config.json`.
 - **🧪 Built-in Demo Mode**:
-  - Toggle between live Azure Service Bus telemetry and realistic mock data with multi-page demo dead letters to preview workflows without live cloud resources.
+  - Toggle between live Azure Service Bus telemetry and realistic mock data with multi-page demo dead letters to preview workflows without live cloud resources (state persisted across application restarts).
 
 ---
+
+## ⌨️ Keyboard Navigation & Shortcuts Reference
+
+The entire application can be navigated without touching a mouse.
+
+### Main Dashboard
+| Shortcut | Action | Description |
+|---|---|---|
+| `Shift + Space` | **Toggle Menu** | Opens/closes the hamburger sidebar menu drawer |
+| `F5` or `⌘R` / `Ctrl + R` or `Alt + R` | **Refresh** | Refreshes entity metrics and resets auto-refresh countdown |
+| `⌘1` – `⌘9` (or `Ctrl + 1-9`) | **Inspect Hotlist** | Focuses and inspects the corresponding DLQ hotlist item #1 to #9 |
+| `↑` / `↓` | **Navigate Hotlist** | Cycles selection through entities in the "Needs Immediate Attention" hotlist |
+| `Alt + N` | **Focus Namespace** | Jumps focus directly to the Service Bus Namespace dropdown |
+| `Alt + A` | **Add Namespace** | Opens the inline namespace creation bar (`Enter` to save, `Esc` to cancel) |
+| `Alt + D` | **Discover Namespaces** | Triggers auto-discovery of Service Bus namespaces in your Azure subscription |
+| `Alt + T` | **Toggle Auto-Refresh** | Pauses or resumes the automatic metric refresh timer |
+| `Alt + S` | **Search Entities** | Focuses the entity search text box |
+| `Alt + F` | **Filter Entities** | Focuses the entity type filter dropdown |
+| `Alt + E` | **Focus Table** | Focuses the All Entities DataGrid for keyboard scrolling |
+| `Esc` | **Close Overlay / Menu** | Closes any open drawer, popup, or input banner |
+
+### Hamburger Menu Drawer
+| Shortcut | Action | Description |
+|---|---|---|
+| `↑` / `↓` | **Navigate Items** | Moves between Account, Demo Mode, Theme, Keyboard Hints, and Close buttons |
+| `Alt + A` | **Account Dialog** | Opens the Azure Account & Authentication dialog |
+| `Alt + D` or `Space` | **Demo Mode** | Toggles offline mock data mode ON / OFF |
+| `Alt + T` or `→` | **Expand Theme Menu** | Expands the theme switcher sub-menu (`←` collapses it) |
+| `Alt + L` / `Alt + K` / `Alt + G` / `Alt + B` | **Select Theme** | Activates Light, Dark, Lego, or Barbie theme |
+| `Alt + K` or `Alt + H` or `Space` | **Toggle Hints** | Turns shortcut footers and unlabeled button badges ON / OFF |
+| `Esc` or `Alt + C` | **Close Menu** | Closes the drawer and restores focus to dashboard |
+
+### Dead Letter Queue Inspector
+| Shortcut | Action | Description |
+|---|---|---|
+| `↑` / `↓` | **Select Message** | Navigates up and down through messages in the DLQ table |
+| `⌘←` / `⌘→` or `Alt + P` / `Alt + N` | **Previous / Next Page** | Navigates to the previous or next page of peeked messages |
+| `Enter` or `Space` or `Alt + D` | **View Details** | Opens the standalone Message Detail window for the highlighted message |
+| `F5` or `⌘R` / `Ctrl + R` or `Alt + R` | **Refresh** | Re-peeks the current DLQ and resets to page 1 |
+| `Esc` or `Alt + C` | **Close** | Closes the inspector window |
+
+### Message Detail Window
+| Shortcut | Action | Description |
+|---|---|---|
+| `⌘←` / `⌘→` or `⌘↑` / `⌘↓` | **Previous / Next Message** | Smoothly cycles through messages |
+| `Alt + P` / `Alt + N` | **Previous / Next** | Moves to the previous or next message in the inspected batch |
+| `Alt + B` | **Copy Body** | Copies the formatted JSON / raw message payload to the clipboard |
+| `Esc` or `Alt + C` | **Close** | Closes the detail window |
+
+### Account & Authentication Dialog
+| Shortcut | Action | Description |
+|---|---|---|
+| `Alt + A` | **Authentication Method** | Focuses the Authentication Method selector dropdown |
+| `↑` / `↓` | **Select Auth Mode** | Cycles through DefaultAzureCredential, SystemAssigned, and UserAssigned |
+| `Enter` or `Esc` or `Alt + D` | **Done / Close** | Saves and closes the dialog |
 
 ## Requirements
 
