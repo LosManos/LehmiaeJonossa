@@ -356,5 +356,87 @@ public class MonitorTests
         Assert.Contains(nameof(ServiceBusEntityMetric.HotlistShortcutTip), changedProps);
         Assert.Contains(nameof(ServiceBusEntityMetric.HotlistInspectButtonToolTip), changedProps);
     }
+
+    [Fact]
+    public void MainWindowViewModel_MenuState_TogglesAndClosesCorrectly()
+    {
+        var vm = new MainWindowViewModel();
+        Assert.False(vm.IsMenuOpen);
+
+        vm.ToggleMenu();
+        Assert.True(vm.IsMenuOpen);
+
+        vm.ToggleMenu();
+        Assert.False(vm.IsMenuOpen);
+
+        vm.ToggleMenuCommand.Execute(null);
+        Assert.True(vm.IsMenuOpen);
+
+        vm.CloseMenuCommand.Execute(null);
+        Assert.False(vm.IsMenuOpen);
+    }
+
+    [Fact]
+    public void MainWindowViewModel_AccountDialogCommand_ClosesMenuAndRaisesEvent()
+    {
+        var vm = new MainWindowViewModel();
+        vm.IsMenuOpen = true;
+
+        bool eventRaised = false;
+        vm.OpenAccountDialogRequested += () => eventRaised = true;
+
+        vm.OpenAccountDialogCommand.Execute(null);
+
+        Assert.False(vm.IsMenuOpen, "Menu should close when opening Account dialog");
+        Assert.True(eventRaised, "OpenAccountDialogRequested event should be fired");
+    }
+
+    [Fact]
+    public void MainWindowViewModel_ThemeSubMenu_UpdatesThemeAndFlags()
+    {
+        var vm = new MainWindowViewModel();
+        
+        vm.SetThemeCommand.Execute(AppTheme.Dark);
+        Assert.Equal(AppTheme.Dark, vm.SelectedTheme);
+        Assert.True(vm.IsDarkThemeSelected);
+        Assert.False(vm.IsLightThemeSelected);
+
+        vm.SetThemeCommand.Execute(AppTheme.Lego);
+        Assert.Equal(AppTheme.Lego, vm.SelectedTheme);
+        Assert.True(vm.IsLegoThemeSelected);
+
+        vm.SetThemeCommand.Execute(AppTheme.Barbie);
+        Assert.Equal(AppTheme.Barbie, vm.SelectedTheme);
+        Assert.True(vm.IsBarbieThemeSelected);
+    }
+
+    [Fact]
+    public void MainWindowViewModel_DemoModeStatusText_ReflectsToggle()
+    {
+        var vm = new MainWindowViewModel();
+        vm.IsDemoMode = false;
+        Assert.Equal("OFF", vm.DemoModeStatusText);
+
+        vm.ToggleDemoModeCommand.Execute(null);
+        Assert.True(vm.IsDemoMode);
+        Assert.Equal("ON", vm.DemoModeStatusText);
+    }
+
+    [Fact]
+    public void MainWindowViewModel_ToggleThemeSubMenu_TogglesAndResetsOnClose()
+    {
+        var vm = new MainWindowViewModel();
+        Assert.False(vm.IsThemeSubMenuOpen);
+
+        vm.ToggleThemeSubMenuCommand.Execute(null);
+        Assert.True(vm.IsThemeSubMenuOpen);
+
+        vm.ToggleThemeSubMenuCommand.Execute(null);
+        Assert.False(vm.IsThemeSubMenuOpen);
+
+        vm.IsThemeSubMenuOpen = true;
+        vm.CloseMenuCommand.Execute(null);
+        Assert.False(vm.IsThemeSubMenuOpen);
+    }
 }
 

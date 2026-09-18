@@ -65,6 +65,12 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isDemoMode = false;
 
+    [ObservableProperty]
+    private bool _isMenuOpen = false;
+
+    [ObservableProperty]
+    private bool _isThemeSubMenuOpen = false;
+
     // KPI Summary properties
     [ObservableProperty]
     private long _totalDeadLetterCount = 0;
@@ -217,6 +223,10 @@ public partial class MainWindowViewModel : ViewModelBase
         _themeService.ApplyTheme(value);
         _settings.Theme = value;
         _ = _configService.SaveSettingsAsync(_settings);
+        OnPropertyChanged(nameof(IsLightThemeSelected));
+        OnPropertyChanged(nameof(IsDarkThemeSelected));
+        OnPropertyChanged(nameof(IsLegoThemeSelected));
+        OnPropertyChanged(nameof(IsBarbieThemeSelected));
     }
 
     partial void OnSelectedAuthModeChanged(AuthMode value)
@@ -400,6 +410,13 @@ public partial class MainWindowViewModel : ViewModelBase
 
     public event Action<AppSettings>? SettingsLoaded;
     public event Action<MessageInspectorViewModel>? OpenInspectorWindowRequested;
+    public event Action? OpenAccountDialogRequested;
+
+    public bool IsLightThemeSelected => SelectedTheme == AppTheme.Light;
+    public bool IsDarkThemeSelected => SelectedTheme == AppTheme.Dark;
+    public bool IsLegoThemeSelected => SelectedTheme == AppTheme.Lego;
+    public bool IsBarbieThemeSelected => SelectedTheme == AppTheme.Barbie;
+    public string DemoModeStatusText => IsDemoMode ? "ON" : "OFF";
 
     public void UpdateMessageDetailWindowBounds(double width, double height, int x, int y)
     {
@@ -419,9 +436,42 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     [RelayCommand]
+    public void ToggleMenu()
+    {
+        IsMenuOpen = !IsMenuOpen;
+    }
+
+    [RelayCommand]
+    public void CloseMenu()
+    {
+        IsMenuOpen = false;
+        IsThemeSubMenuOpen = false;
+    }
+
+    [RelayCommand]
+    public void ToggleThemeSubMenu()
+    {
+        IsThemeSubMenuOpen = !IsThemeSubMenuOpen;
+    }
+
+    [RelayCommand]
+    public void OpenAccountDialog()
+    {
+        CloseMenu();
+        OpenAccountDialogRequested?.Invoke();
+    }
+
+    [RelayCommand]
+    public void SetTheme(AppTheme theme)
+    {
+        SelectedTheme = theme;
+    }
+
+    [RelayCommand]
     public void ToggleDemoMode()
     {
         IsDemoMode = !IsDemoMode;
+        OnPropertyChanged(nameof(DemoModeStatusText));
         _monitorService.SetDemoMode(IsDemoMode);
         AuthStatus = _monitorService.AuthStatusMessage;
         AccountIdentity = _monitorService.CurrentAccountIdentity;
