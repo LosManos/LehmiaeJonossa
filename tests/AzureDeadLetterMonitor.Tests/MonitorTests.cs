@@ -34,13 +34,28 @@ public class MonitorTests
             SizeInBytes = 1024
         };
 
+        var entityZeroActive = new ServiceBusEntityMetric
+        {
+            Name = "empty-queue",
+            Kind = EntityKind.Queue,
+            ActiveMessageCount = 0,
+            DeadLetterMessageCount = 0,
+            TotalMessageCount = 0,
+            SizeInBytes = 0
+        };
+
         Assert.True(entityWithDlq.HasDeadLetters);
+        Assert.True(entityWithDlq.HasActiveMessages);
         Assert.Equal("5", entityWithDlq.FormattedDeadLetterCount);
         Assert.Equal("orders-queue", entityWithDlq.DisplayName);
         Assert.Equal("Queue", entityWithDlq.KindDisplay);
 
         Assert.False(entityHealthy.HasDeadLetters);
+        Assert.True(entityHealthy.HasActiveMessages);
         Assert.Equal("0", entityHealthy.FormattedDeadLetterCount);
+
+        Assert.False(entityZeroActive.HasActiveMessages);
+        Assert.Equal("0", entityZeroActive.FormattedActiveCount);
     }
 
     [Fact]

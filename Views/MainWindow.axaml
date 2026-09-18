@@ -430,7 +430,7 @@
                                             CornerRadius="8"
                                             Margin="0,0,0,10"
                                             Padding="16,12">
-                                        <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto">
+                                        <Grid ColumnDefinitions="Auto,*,Auto,Auto">
                                             <!-- Kind Badge -->
                                             <Border Grid.Column="0" 
                                                     Background="{DynamicResource ThemeCardBackgroundBrush}" 
@@ -446,7 +446,7 @@
                                             </Border>
 
                                             <!-- Entity Name -->
-                                            <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center">
+                                            <StackPanel Grid.Column="1" Margin="14,0,16,0" VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding DisplayName}" 
                                                            FontSize="14" 
                                                            FontWeight="Bold" 
@@ -456,40 +456,56 @@
                                                            Foreground="{DynamicResource ThemeTextMutedBrush}"/>
                                             </StackPanel>
 
-                                            <!-- Active Count -->
-                                            <StackPanel Grid.Column="2" Margin="20,0" VerticalAlignment="Center" HorizontalAlignment="Right">
-                                                <TextBlock Text="{Binding FormattedActiveCount}" 
-                                                           FontSize="14" 
-                                                           FontWeight="SemiBold" 
-                                                           HorizontalAlignment="Right"/>
-                                                <TextBlock Text="Active Msgs" 
-                                                           FontSize="10" 
-                                                           Foreground="{DynamicResource ThemeTextMutedBrush}" 
-                                                           HorizontalAlignment="Right"/>
-                                            </StackPanel>
+                                            <!-- Active Messages Pill (Green if 0, Yellow/Amber if > 0) -->
+                                            <Panel Grid.Column="2" Margin="0,0,14,0" VerticalAlignment="Center">
+                                                <!-- Zero Active Messages: Green Pill -->
+                                                <Border IsVisible="{Binding !HasActiveMessages}"
+                                                        Background="{DynamicResource ThemeSuccessGreenBrush}" 
+                                                        CornerRadius="6" 
+                                                        Padding="12,6" 
+                                                        VerticalAlignment="Center">
+                                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                                        <TextBlock Text="🟢" FontSize="12" VerticalAlignment="Center"/>
+                                                        <TextBlock Text="0 Active" 
+                                                                   Foreground="#FFFFFF" 
+                                                                   FontWeight="ExtraBold" 
+                                                                   FontSize="13"
+                                                                   VerticalAlignment="Center"/>
+                                                    </StackPanel>
+                                                </Border>
 
-                                            <!-- DLQ Count Badge -->
-                                            <Border Grid.Column="3" 
-                                                    Background="{DynamicResource ThemeAlertRedBrush}" 
-                                                    CornerRadius="6" 
-                                                    Padding="12,6" 
-                                                    Margin="0,0,16,0" 
-                                                    VerticalAlignment="Center">
-                                                <StackPanel Orientation="Horizontal" Spacing="6">
-                                                    <TextBlock Text="🚨" FontSize="12"/>
-                                                    <TextBlock Text="{Binding FormattedDeadLetterCount, StringFormat='{}{0} DLQ'}" 
+                                                <!-- Greater than Zero Active Messages: Yellow/Amber Pill -->
+                                                <Border IsVisible="{Binding HasActiveMessages}"
+                                                        Background="{DynamicResource ThemeWarningAmberBrush}" 
+                                                        CornerRadius="6" 
+                                                        Padding="12,6" 
+                                                        VerticalAlignment="Center">
+                                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                                        <TextBlock Text="📨" FontSize="12" VerticalAlignment="Center"/>
+                                                        <TextBlock Text="{Binding FormattedActiveCount, StringFormat='{}{0} Active'}" 
+                                                                   Foreground="#FFFFFF" 
+                                                                   FontWeight="ExtraBold" 
+                                                                   FontSize="13"
+                                                                   VerticalAlignment="Center"/>
+                                                    </StackPanel>
+                                                </Border>
+                                            </Panel>
+
+                                            <!-- Combined DLQ Inspect Button with Message Count -->
+                                            <Button Grid.Column="3" 
+                                                    Classes="Inspect" 
+                                                    Command="{Binding #RootWindow.((vm:MainWindowViewModel)DataContext).InspectEntityCommand}"
+                                                    CommandParameter="{Binding .}"
+                                                    ToolTip.Tip="Open Dead Letter Queue inspector">
+                                                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                                    <TextBlock Text="🚨" FontSize="12" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding FormattedDeadLetterCount, StringFormat='Inspect DLQ ({0})'}" 
                                                                Foreground="#FFFFFF" 
                                                                FontWeight="ExtraBold" 
-                                                               FontSize="13"/>
+                                                               FontSize="13"
+                                                               VerticalAlignment="Center"/>
                                                 </StackPanel>
-                                            </Border>
-
-                                            <!-- Action Button -->
-                                            <Button Grid.Column="4" 
-                                                    Classes="Inspect" 
-                                                    Content="Inspect DLQ"
-                                                    Command="{Binding #RootWindow.((vm:MainWindowViewModel)DataContext).InspectEntityCommand}"
-                                                    CommandParameter="{Binding .}"/>
+                                            </Button>
                                         </Grid>
                                     </Border>
                                 </DataTemplate>
@@ -596,10 +612,37 @@
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
-                                <!-- Active Count -->
-                                <DataGridTextColumn Header="Active Messages" 
-                                                    Binding="{Binding FormattedActiveCount}" 
-                                                    Width="130"/>
+                                <!-- Active Count (Pill) -->
+                                <DataGridTemplateColumn Header="Active Messages" Width="140">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate DataType="models:ServiceBusEntityMetric">
+                                            <Panel VerticalAlignment="Center" Margin="8,0">
+                                                <!-- > 0 active: Amber/Yellow pill -->
+                                                <Border IsVisible="{Binding HasActiveMessages}" 
+                                                        Background="{DynamicResource ThemeWarningAmberBrush}" 
+                                                        CornerRadius="4" 
+                                                        Padding="8,2" 
+                                                        HorizontalAlignment="Left">
+                                                    <TextBlock Text="{Binding FormattedActiveCount}" 
+                                                               Foreground="#FFFFFF" 
+                                                               FontWeight="Bold" 
+                                                               FontSize="12"/>
+                                                </Border>
+                                                <!-- 0 active: Green pill -->
+                                                <Border IsVisible="{Binding !HasActiveMessages}" 
+                                                        Background="{DynamicResource ThemeSuccessGreenBrush}" 
+                                                        CornerRadius="4" 
+                                                        Padding="8,2" 
+                                                        HorizontalAlignment="Left">
+                                                    <TextBlock Text="0" 
+                                                               Foreground="#FFFFFF" 
+                                                               FontWeight="Bold" 
+                                                               FontSize="12"/>
+                                                </Border>
+                                            </Panel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
 
                                 <!-- Size -->
                                 <DataGridTextColumn Header="Size" 

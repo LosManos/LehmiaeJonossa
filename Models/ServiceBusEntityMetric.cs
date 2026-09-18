@@ -25,6 +25,7 @@ public class ServiceBusEntityMetric
     public DateTimeOffset? AccessedAt { get; init; }
 
     public bool HasDeadLetters => DeadLetterMessageCount > 0;
+    public bool HasActiveMessages => ActiveMessageCount > 0;
 
     public string DisplayName => Kind == EntityKind.TopicSubscription 
         ? $"{TopicName} / {SubscriptionName}" 
