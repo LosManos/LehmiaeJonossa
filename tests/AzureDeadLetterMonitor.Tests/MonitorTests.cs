@@ -299,5 +299,62 @@ public class MonitorTests
         Assert.Equal(150, settings.MessageDetailWindowX);
         Assert.Equal(220, settings.MessageDetailWindowY);
     }
+
+    [Fact]
+    public void ServiceBusEntityMetric_HotlistIndex_FormatsAndGeneratesShortcuts()
+    {
+        var entity = new ServiceBusEntityMetric
+        {
+            Name = "orders-dlq",
+            Kind = EntityKind.Queue,
+            DeadLetterMessageCount = 10
+        };
+
+        Assert.Equal(0, entity.HotlistIndex);
+        Assert.Equal(string.Empty, entity.FormattedHotlistIndex);
+        Assert.Equal(string.Empty, entity.FormattedRowNumber);
+        Assert.Equal(string.Empty, entity.HotlistShortcutTip);
+
+        entity.HotlistIndex = 1;
+        Assert.Equal("1", entity.FormattedHotlistIndex);
+        Assert.Equal("#1", entity.FormattedRowNumber);
+        Assert.Contains("1", entity.HotlistShortcutTip);
+        Assert.Contains("1", entity.HotlistInspectButtonToolTip);
+
+        entity.HotlistIndex = 9;
+        Assert.Equal("9", entity.FormattedHotlistIndex);
+        Assert.Equal("#9", entity.FormattedRowNumber);
+        Assert.Contains("9", entity.HotlistShortcutTip);
+
+        entity.HotlistIndex = 10;
+        Assert.Equal("10", entity.FormattedHotlistIndex);
+        Assert.Equal("#10", entity.FormattedRowNumber);
+        Assert.Equal("Item #10", entity.HotlistShortcutTip);
+    }
+
+    [Fact]
+    public void ServiceBusEntityMetric_HotlistIndex_NotifiesPropertyChanged()
+    {
+        var entity = new ServiceBusEntityMetric
+        {
+            Name = "orders-dlq",
+            Kind = EntityKind.Queue,
+            DeadLetterMessageCount = 10
+        };
+
+        var changedProps = new System.Collections.Generic.List<string>();
+        entity.PropertyChanged += (s, e) =>
+        {
+            if (e.PropertyName != null)
+                changedProps.Add(e.PropertyName);
+        };
+
+        entity.HotlistIndex = 3;
+
+        Assert.Contains(nameof(ServiceBusEntityMetric.HotlistIndex), changedProps);
+        Assert.Contains(nameof(ServiceBusEntityMetric.FormattedHotlistIndex), changedProps);
+        Assert.Contains(nameof(ServiceBusEntityMetric.HotlistShortcutTip), changedProps);
+        Assert.Contains(nameof(ServiceBusEntityMetric.HotlistInspectButtonToolTip), changedProps);
+    }
 }
 

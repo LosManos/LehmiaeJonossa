@@ -1,4 +1,5 @@
 using System;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace AzureDeadLetterMonitor.Models;
 
@@ -8,8 +9,38 @@ public enum EntityKind
     TopicSubscription
 }
 
-public class ServiceBusEntityMetric
+public class ServiceBusEntityMetric : ObservableObject
 {
+    private int _hotlistIndex;
+    public int HotlistIndex
+    {
+        get => _hotlistIndex;
+        set
+        {
+            if (SetProperty(ref _hotlistIndex, value))
+            {
+                OnPropertyChanged(nameof(FormattedHotlistIndex));
+                OnPropertyChanged(nameof(FormattedRowNumber));
+                OnPropertyChanged(nameof(HotlistShortcutTip));
+                OnPropertyChanged(nameof(HotlistInspectButtonToolTip));
+            }
+        }
+    }
+
+    public string FormattedHotlistIndex => HotlistIndex > 0 ? HotlistIndex.ToString() : string.Empty;
+    public string FormattedRowNumber => HotlistIndex > 0 ? $"#{HotlistIndex}" : string.Empty;
+
+    public string HotlistShortcutTip => HotlistIndex is >= 1 and <= 9
+        ? (OperatingSystem.IsMacOS()
+            ? $"Shortcut: ⌘{HotlistIndex} to select (Enter to inspect)"
+            : $"Shortcut: Ctrl+{HotlistIndex} to select (Enter to inspect)")
+        : (HotlistIndex > 0 ? $"Item #{HotlistIndex}" : string.Empty);
+
+    public string HotlistInspectButtonToolTip => HotlistIndex is >= 1 and <= 9
+        ? (OperatingSystem.IsMacOS()
+            ? $"Open Dead Letter Queue inspector (⌘{HotlistIndex} to select, Enter to open)"
+            : $"Open Dead Letter Queue inspector (Ctrl+{HotlistIndex} to select, Enter to open)")
+        : "Open Dead Letter Queue inspector";
     public required string Name { get; init; }
     public EntityKind Kind { get; init; }
     public string? TopicName { get; init; }

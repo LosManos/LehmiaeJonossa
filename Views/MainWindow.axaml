@@ -43,11 +43,20 @@
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="CornerRadius" Value="6"/>
             <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
             <Setter Property="Cursor" Value="Hand"/>
         </Style>
 
         <Style Selector="Button.Inspect:pointerover">
             <Setter Property="Opacity" Value="0.9"/>
+        </Style>
+
+        <Style Selector="Button.Inspect:focus">
+            <Setter Property="BorderBrush" Value="#FFFFFF"/>
+        </Style>
+        <Style Selector="Button.Inspect:focus-visible">
+            <Setter Property="BorderBrush" Value="#FFFFFF"/>
         </Style>
     </Window.Styles>
 
@@ -420,7 +429,8 @@
                         </Border>
 
                         <!-- Hotlist Items -->
-                        <ItemsControl ItemsSource="{Binding HotlistEntities}" 
+                        <ItemsControl x:Name="HotlistControl"
+                                      ItemsSource="{Binding HotlistEntities}" 
                                       IsVisible="{Binding HasDeadLettersDetected}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate DataType="models:ServiceBusEntityMetric">
@@ -430,9 +440,28 @@
                                             CornerRadius="8"
                                             Margin="0,0,0,10"
                                             Padding="16,12">
-                                        <Grid ColumnDefinitions="Auto,*,Auto,Auto">
-                                            <!-- Kind Badge -->
+                                        <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto,Auto">
+                                            <!-- Figure Badge (1 to 9) -->
                                             <Border Grid.Column="0" 
+                                                    Background="{DynamicResource ThemeCardBackgroundBrush}" 
+                                                    BorderBrush="{DynamicResource ThemeCardBorderBrush}" 
+                                                    BorderThickness="1" 
+                                                    CornerRadius="6" 
+                                                    MinWidth="28" Height="28"
+                                                    Padding="6,0"
+                                                    Margin="0,0,10,0"
+                                                    VerticalAlignment="Center"
+                                                    ToolTip.Tip="{Binding HotlistShortcutTip}">
+                                                <TextBlock Text="{Binding FormattedHotlistIndex}" 
+                                                           FontSize="12" 
+                                                           FontWeight="Bold" 
+                                                           Foreground="{DynamicResource ThemeTextPrimaryBrush}"
+                                                           HorizontalAlignment="Center" 
+                                                           VerticalAlignment="Center"/>
+                                            </Border>
+
+                                            <!-- Kind Badge -->
+                                            <Border Grid.Column="1" 
                                                     Background="{DynamicResource ThemeCardBackgroundBrush}" 
                                                     BorderBrush="{DynamicResource ThemeCardBorderBrush}" 
                                                     BorderThickness="1" 
@@ -446,7 +475,7 @@
                                             </Border>
 
                                             <!-- Entity Name -->
-                                            <StackPanel Grid.Column="1" Margin="14,0,16,0" VerticalAlignment="Center">
+                                            <StackPanel Grid.Column="2" Margin="14,0,16,0" VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding DisplayName}" 
                                                            FontSize="14" 
                                                            FontWeight="Bold" 
@@ -457,7 +486,7 @@
                                             </StackPanel>
 
                                             <!-- Active Messages Pill (Green if 0, Yellow/Amber if > 0) -->
-                                            <Panel Grid.Column="2" Margin="0,0,14,0" VerticalAlignment="Center">
+                                            <Panel Grid.Column="3" Margin="0,0,14,0" VerticalAlignment="Center">
                                                 <!-- Zero Active Messages: Green Pill -->
                                                 <Border IsVisible="{Binding !HasActiveMessages}"
                                                         Background="{DynamicResource ThemeSuccessGreenBrush}" 
@@ -492,11 +521,11 @@
                                             </Panel>
 
                                             <!-- Combined DLQ Inspect Button with Message Count -->
-                                            <Button Grid.Column="3" 
+                                            <Button Grid.Column="4" 
                                                     Classes="Inspect" 
                                                     Command="{Binding #RootWindow.((vm:MainWindowViewModel)DataContext).InspectEntityCommand}"
                                                     CommandParameter="{Binding .}"
-                                                    ToolTip.Tip="Open Dead Letter Queue inspector">
+                                                    ToolTip.Tip="{Binding HotlistInspectButtonToolTip}">
                                                 <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
                                                     <TextBlock Text="🚨" FontSize="12" VerticalAlignment="Center"/>
                                                     <TextBlock Text="{Binding FormattedDeadLetterCount, StringFormat='Inspect DLQ ({0})'}" 
@@ -506,6 +535,25 @@
                                                                VerticalAlignment="Center"/>
                                                 </StackPanel>
                                             </Button>
+
+                                            <!-- Row Number to the right of the button -->
+                                            <Border Grid.Column="5" 
+                                                    Background="{DynamicResource ThemeCardBackgroundBrush}" 
+                                                    BorderBrush="{DynamicResource ThemeCardBorderBrush}" 
+                                                    BorderThickness="1" 
+                                                    CornerRadius="6" 
+                                                    MinWidth="28" Height="28"
+                                                    Padding="6,0"
+                                                    Margin="10,0,0,0"
+                                                    VerticalAlignment="Center"
+                                                    ToolTip.Tip="{Binding HotlistShortcutTip}">
+                                                <TextBlock Text="{Binding FormattedHotlistIndex}" 
+                                                           FontSize="12" 
+                                                           FontWeight="Bold" 
+                                                           Foreground="{DynamicResource ThemeTextPrimaryBrush}"
+                                                           HorizontalAlignment="Center" 
+                                                           VerticalAlignment="Center"/>
+                                            </Border>
                                         </Grid>
                                     </Border>
                                 </DataTemplate>

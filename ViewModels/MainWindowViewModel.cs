@@ -348,8 +348,10 @@ public partial class MainWindowViewModel : ViewModelBase
 
             // Populate Hotlist (only items with DeadLetterCount > 0)
             HotlistEntities.Clear();
+            int hotlistIndex = 1;
             foreach (var dlq in _rawEntities.Where(e => e.DeadLetterMessageCount > 0))
             {
+                dlq.HotlistIndex = hotlistIndex++;
                 HotlistEntities.Add(dlq);
             }
 
