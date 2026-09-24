@@ -6,7 +6,7 @@
         mc:Ignorable="d" d:DesignWidth="480" d:DesignHeight="460"
         x:Class="AzureDeadLetterMonitor.Views.AccountDialogWindow"
         x:DataType="vm:MainWindowViewModel"
-        Icon="/Assets/avalonia-logo.ico"
+        Icon="/Assets/app-icon.ico"
         Title="Azure Account &amp; Authentication"
         Width="480" Height="460"
         MinWidth="420" MinHeight="400"

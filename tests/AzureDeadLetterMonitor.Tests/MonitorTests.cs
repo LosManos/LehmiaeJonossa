@@ -284,6 +284,45 @@ public class MonitorTests
     }
 
     [Fact]
+    public async Task MessageInspectorViewModel_OpenDetail_SelectsFirstMessageAndRaisesEvent()
+    {
+        var service = new AzureServiceBusMonitorService();
+        service.SetDemoMode(true);
+
+        var vm = new MessageInspectorViewModel(service)
+        {
+            PageSize = 10
+        };
+
+        var metric = new ServiceBusEntityMetric
+        {
+            Name = "orders-processing",
+            Kind = EntityKind.Queue,
+            DeadLetterMessageCount = 28
+        };
+
+        await vm.OpenForEntityAsync(metric);
+
+        Assert.NotNull(vm.SelectedMessage);
+        Assert.Equal(vm.Messages.First().MessageId, vm.SelectedMessage.MessageId);
+
+        DeadLetterMessageDetail? openedMessage = null;
+        int openedIndex = -1;
+        vm.OpenMessageDetailRequested += (msg, list, idx) =>
+        {
+            openedMessage = msg;
+            openedIndex = idx;
+        };
+
+        // When user invokes OpenDetail without explicit parameter (e.g. Enter key)
+        vm.OpenDetail(null);
+
+        Assert.NotNull(openedMessage);
+        Assert.Equal(vm.SelectedMessage.MessageId, openedMessage.MessageId);
+        Assert.Equal(0, openedIndex);
+    }
+
+    [Fact]
     public void AppSettings_MessageDetailWindowBounds_StoresAndRetrieves()
     {
         var settings = new AppSettings

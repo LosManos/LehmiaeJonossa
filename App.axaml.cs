@@ -4,6 +4,8 @@ using Avalonia.Data.Core;
 using Avalonia.Data.Core.Plugins;
 using System.Linq;
 using Avalonia.Markup.Xaml;
+using Avalonia.Threading;
+using AzureDeadLetterMonitor.Services;
 using AzureDeadLetterMonitor.ViewModels;
 using AzureDeadLetterMonitor.Views;
 
@@ -27,6 +29,10 @@ public partial class App : Application
             {
                 DataContext = new MainWindowViewModel(),
             };
+
+            // Ensure the macOS Dock icon is updated even when running in dev mode via 'dotnet run'
+            MacDockIconHelper.SetDockIcon();
+            Dispatcher.UIThread.Post(() => MacDockIconHelper.SetDockIcon(), DispatcherPriority.Background);
         }
 
         base.OnFrameworkInitializationCompleted();

@@ -18,6 +18,7 @@ public partial class DeadLetterInspectorWindow : Window
     {
         InitializeComponent();
         AddHandler(InputElement.KeyDownEvent, OnInspectorKeyDown, RoutingStrategies.Tunnel);
+        MessagesGrid.AddHandler(InputElement.KeyDownEvent, OnMessagesGridKeyDown, RoutingStrategies.Tunnel);
         Loaded += OnWindowLoaded;
     }
 
@@ -27,11 +28,9 @@ public partial class DeadLetterInspectorWindow : Window
         {
             vm.CloseRequested += OnCloseRequested;
             vm.OpenMessageDetailRequested += OnOpenMessageDetailRequested;
+            vm.PropertyChanged += OnViewModelPropertyChanged;
 
-            if (vm.Messages.Count > 0 && MessagesGrid.SelectedItem == null)
-            {
-                MessagesGrid.SelectedIndex = 0;
-            }
+            SyncSelection();
         }
         _isUserSelection = true;
 
@@ -47,11 +46,50 @@ public partial class DeadLetterInspectorWindow : Window
         {
             vm.CloseRequested -= OnCloseRequested;
             vm.OpenMessageDetailRequested -= OnOpenMessageDetailRequested;
+            vm.PropertyChanged -= OnViewModelPropertyChanged;
         }
 
         _activeDetailWindow?.Close();
         _activeDetailWindow = null;
         base.OnClosed(e);
+    }
+
+    private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(MessageInspectorViewModel.SelectedMessage) ||
+            e.PropertyName == nameof(MessageInspectorViewModel.IsLoading))
+        {
+            SyncSelection();
+        }
+    }
+
+    private void SyncSelection()
+    {
+        if (DataContext is MessageInspectorViewModel vm && vm.Messages.Count > 0)
+        {
+            if (vm.SelectedMessage == null)
+            {
+                vm.SelectedMessage = vm.Messages[0];
+            }
+            if (!Equals(MessagesGrid.SelectedItem, vm.SelectedMessage))
+            {
+                MessagesGrid.SelectedItem = vm.SelectedMessage;
+            }
+            var idx = vm.Messages.IndexOf(vm.SelectedMessage);
+            if (idx >= 0 && MessagesGrid.SelectedIndex != idx)
+            {
+                MessagesGrid.SelectedIndex = idx;
+            }
+        }
+    }
+
+    private void OnMessagesGridKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter)
+        {
+            e.Handled = true;
+            OpenSelectedMessageDetail();
+        }
     }
 
     private void OnInspectorKeyDown(object? sender, KeyEventArgs e)
@@ -120,10 +158,9 @@ public partial class DeadLetterInspectorWindow : Window
                 }
 
                 MessagesGrid.SelectedIndex = nextIdx;
-                if (MessagesGrid.SelectedItem != null)
-                {
-                    MessagesGrid.ScrollIntoView(MessagesGrid.SelectedItem, null);
-                }
+                vm.SelectedMessage = vm.Messages[nextIdx];
+                MessagesGrid.SelectedItem = vm.SelectedMessage;
+                MessagesGrid.ScrollIntoView(vm.SelectedMessage, null);
                 MessagesGrid.Focus();
                 e.Handled = true;
                 return;
@@ -133,13 +170,28 @@ public partial class DeadLetterInspectorWindow : Window
         // 5. Enter or Space or Alt+D: Open details for selected message
         if (e.Key == Key.Enter || (e.Key == Key.Space && MessagesGrid.IsFocused) || (isAlt && e.Key == Key.D))
         {
-            if (vm.SelectedMessage != null)
-            {
-                var index = vm.Messages.IndexOf(vm.SelectedMessage);
-                OpenDetailWindow(vm.Messages.ToList(), index >= 0 ? index : 0);
-                e.Handled = true;
-                return;
-            }
+            e.Handled = true;
+            OpenSelectedMessageDetail();
+            return;
+        }
+    }
+
+    private void OpenSelectedMessageDetail()
+    {
+        var vm = DataContext as MessageInspectorViewModel;
+        if (vm == null || vm.Messages.Count == 0) return;
+
+        var target = vm.SelectedMessage
+            ?? MessagesGrid.SelectedItem as DeadLetterMessageDetail
+            ?? (MessagesGrid.SelectedIndex >= 0 && MessagesGrid.SelectedIndex < vm.Messages.Count ? vm.Messages[MessagesGrid.SelectedIndex] : null)
+            ?? vm.Messages.FirstOrDefault();
+
+        if (target != null)
+        {
+            vm.SelectedMessage = target;
+            MessagesGrid.SelectedItem = target;
+            var index = vm.Messages.IndexOf(target);
+            OpenDetailWindow(vm.Messages.ToList(), index >= 0 ? index : 0);
         }
     }
 
@@ -157,31 +209,41 @@ public partial class DeadLetterInspectorWindow : Window
     {
         if (sender is Button btn && btn.Tag is DeadLetterMessageDetail msg && DataContext is MessageInspectorViewModel vm)
         {
+            vm.SelectedMessage = msg;
+            MessagesGrid.SelectedItem = msg;
             var index = vm.Messages.IndexOf(msg);
             OpenDetailWindow(vm.Messages.ToList(), index >= 0 ? index : 0);
+        }
+        else
+        {
+            OpenSelectedMessageDetail();
         }
     }
 
     private void OnGridDoubleTapped(object? sender, TappedEventArgs e)
     {
-        if (DataContext is MessageInspectorViewModel vm && vm.SelectedMessage != null)
-        {
-            var index = vm.Messages.IndexOf(vm.SelectedMessage);
-            OpenDetailWindow(vm.Messages.ToList(), index >= 0 ? index : 0);
-        }
+        OpenSelectedMessageDetail();
     }
 
     private void OnGridSelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
-        if (_suppressSelectionEvent || !_isUserSelection) return;
-
-        if (e.AddedItems.Count > 0 && e.AddedItems[0] is DeadLetterMessageDetail selected && DataContext is MessageInspectorViewModel vm)
+        if (DataContext is MessageInspectorViewModel vm)
         {
-            vm.SelectedMessage = selected;
-            // If detail window is open, update it in-place
-            if (_activeDetailWindow != null && _activeDetailWindow.DataContext is MessageDetailViewModel detailVm)
+            if (MessagesGrid.SelectedItem is DeadLetterMessageDetail selected)
             {
-                var index = vm.Messages.IndexOf(selected);
+                vm.SelectedMessage = selected;
+            }
+            else if (e.AddedItems.Count > 0 && e.AddedItems[0] is DeadLetterMessageDetail added)
+            {
+                vm.SelectedMessage = added;
+            }
+
+            if (_suppressSelectionEvent || !_isUserSelection) return;
+
+            // If detail window is open, update it in-place
+            if (_activeDetailWindow != null && vm.SelectedMessage != null && _activeDetailWindow.DataContext is MessageDetailViewModel detailVm)
+            {
+                var index = vm.Messages.IndexOf(vm.SelectedMessage);
                 if (index >= 0)
                 {
                     detailVm.CurrentIndex = Math.Clamp(index, 0, vm.Messages.Count - 1);

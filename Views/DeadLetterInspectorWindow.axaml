@@ -8,6 +8,7 @@
         x:Class="AzureDeadLetterMonitor.Views.DeadLetterInspectorWindow"
         x:DataType="vm:MessageInspectorViewModel"
         Title="{Binding EntityDisplayName, StringFormat='Dead Letter Inspector - {0}'}"
+        Icon="/Assets/app-icon.ico"
         Width="1050" Height="680"
         MinWidth="800" MinHeight="500"
         WindowStartupLocation="CenterOwner"
@@ -148,7 +149,8 @@
                           CanUserSortColumns="False"
                           SelectionMode="Single"
                           SelectionChanged="OnGridSelectionChanged"
-                          DoubleTapped="OnGridDoubleTapped">
+                          DoubleTapped="OnGridDoubleTapped"
+                          KeyDown="OnMessagesGridKeyDown">
                     <DataGrid.Columns>
                         <!-- 1. Enqueued Time -->
                         <DataGridTextColumn Header="Time" 

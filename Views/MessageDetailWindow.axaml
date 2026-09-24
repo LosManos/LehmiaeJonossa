@@ -8,6 +8,7 @@
         x:Class="AzureDeadLetterMonitor.Views.MessageDetailWindow"
         x:DataType="vm:MessageDetailViewModel"
         Title="{Binding CurrentMessage.MessageId, StringFormat='Message Details - {0}'}"
+        Icon="/Assets/app-icon.ico"
         Width="880" Height="700"
         MinWidth="700" MinHeight="500"
         WindowStartupLocation="CenterOwner"
