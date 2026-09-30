@@ -1,0 +1,406 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:LehmiaeJonossa.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="620" d:DesignHeight="660"
+        x:Class="LehmiaeJonossa.Views.ManageNamespacesWindow"
+        x:DataType="vm:ManageNamespacesViewModel"
+        Icon="/Assets/app-icon.ico"
+        Title="Manage Service Bus Namespaces"
+        Width="620" Height="660"
+        MinWidth="540" MinHeight="520"
+        CanResize="True"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource ThemeBackgroundBrush}">
+
+    <Window.Styles>
+        <Style Selector="Border.Card">
+            <Setter Property="Background" Value="{DynamicResource ThemeCardBackgroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ThemeCardBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="{DynamicResource ThemeCardBorderThickness}"/>
+            <Setter Property="CornerRadius" Value="{DynamicResource ThemeCardCornerRadius}"/>
+            <Setter Property="BoxShadow" Value="0 2 8 0 #15000000"/>
+        </Style>
+        <Style Selector="Button.ActionPrimary">
+            <Setter Property="Background" Value="{DynamicResource ThemeAccentBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource ThemeAccentForegroundBrush}"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="14,8"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="Button.ActionDanger">
+            <Setter Property="Background" Value="{DynamicResource ThemeAlertRedBrush}"/>
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="ListBoxItem">
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Margin" Value="0,2"/>
+        </Style>
+    </Window.Styles>
+
+    <Grid RowDefinitions="Auto,*,Auto" Margin="24">
+        <!-- 1. HEADER -->
+        <Grid Grid.Row="0" ColumnDefinitions="Auto,*" Margin="0,0,0,16">
+            <Border Grid.Column="0" Width="44" Height="44" 
+                    Background="{DynamicResource ThemeHeaderBackgroundBrush}"
+                    BorderBrush="{DynamicResource ThemeCardBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="10" 
+                    Margin="0,0,14,0">
+                <TextBlock Text="☁️" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                <TextBlock Text="Manage Service Bus Namespaces" 
+                           FontSize="18" 
+                           FontWeight="Bold" 
+                           Foreground="{DynamicResource ThemeTextPrimaryBrush}"/>
+                <TextBlock Text="Add, edit, remove, and switch configured Service Bus namespaces" 
+                           FontSize="12" 
+                           Foreground="{DynamicResource ThemeTextMutedBrush}"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- 2. SCROLLABLE CONTENT BODY -->
+        <ScrollViewer Grid.Row="1">
+            <StackPanel Spacing="16">
+                <!-- Status Feedback Banner -->
+                <Border IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                        Background="{DynamicResource ThemeSuccessGreenBackgroundBrush}"
+                        BorderBrush="{DynamicResource ThemeSuccessGreenBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="12,8">
+                    <Grid ColumnDefinitions="Auto,*">
+                        <TextBlock Grid.Column="0" Text="✓" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource ThemeSuccessGreenBrush}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{Binding StatusMessage}" FontSize="12" FontWeight="Medium" Foreground="{DynamicResource ThemeSuccessGreenBrush}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                    </Grid>
+                </Border>
+
+                <!-- Error Feedback Banner -->
+                <Border IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                        Background="{DynamicResource ThemeAlertRedBackgroundBrush}"
+                        BorderBrush="{DynamicResource ThemeAlertRedBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="12,8">
+                    <Grid ColumnDefinitions="Auto,*">
+                        <TextBlock Grid.Column="0" Text="⚠️" FontSize="14" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{Binding ErrorMessage}" FontSize="12" FontWeight="Medium" Foreground="{DynamicResource ThemeAlertRedBrush}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                    </Grid>
+                </Border>
+
+                <!-- LIST OF CONFIGURED NAMESPACES CARD (READ, SELECT, DELETE, EDIT) -->
+                <Border Classes="Card" Padding="16,14">
+                    <StackPanel Spacing="12">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Grid.Column="0" 
+                                       Text="CONFIGURED NAMESPACES" 
+                                       FontSize="11" 
+                                       FontWeight="Bold" 
+                                       Foreground="{DynamicResource ThemeTextMutedBrush}"
+                                       LetterSpacing="0.8"
+                                       VerticalAlignment="Center"/>
+                            <Border Grid.Column="1" 
+                                    Background="{DynamicResource ThemeBackgroundBrush}"
+                                    BorderBrush="{DynamicResource ThemeCardBorderBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="10"
+                                    Padding="8,2">
+                                <TextBlock Text="{Binding NamespaceItems.Count, StringFormat='Total: {0}'}" 
+                                           FontSize="11" 
+                                           FontWeight="SemiBold" 
+                                           Foreground="{DynamicResource ThemeTextSecondaryBrush}"/>
+                            </Border>
+                        </Grid>
+
+                        <!-- Namespace ListBox -->
+                        <Border Background="{DynamicResource ThemeBackgroundBrush}"
+                                BorderBrush="{DynamicResource ThemeCardBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                MaxHeight="220">
+                            <ListBox x:Name="NamespacesListBox"
+                                     ItemsSource="{Binding NamespaceItems}"
+                                     SelectedItem="{Binding SelectedItem}"
+                                     Background="Transparent"
+                                     BorderThickness="0"
+                                     CornerRadius="8"
+                                     ScrollViewer.VerticalScrollBarVisibility="Auto">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:NamespaceItemViewModel">
+                                        <Grid ColumnDefinitions="Auto,*,Auto" Margin="2,0">
+                                            <TextBlock Grid.Column="0" Text="☁️" FontSize="14" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="1" 
+                                                       Text="{Binding Name}" 
+                                                       FontSize="13" 
+                                                       FontWeight="Medium" 
+                                                       VerticalAlignment="Center"
+                                                       TextTrimming="CharacterEllipsis"/>
+                                            <Border Grid.Column="2" 
+                                                    IsVisible="{Binding IsActive}"
+                                                    Background="{DynamicResource ThemeSuccessGreenBackgroundBrush}"
+                                                    BorderBrush="{DynamicResource ThemeSuccessGreenBorderBrush}"
+                                                    BorderThickness="1"
+                                                    CornerRadius="4"
+                                                    Padding="6,2"
+                                                    Margin="8,0,0,0"
+                                                    VerticalAlignment="Center">
+                                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                                    <TextBlock Text="✓" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource ThemeSuccessGreenBrush}"/>
+                                                    <TextBlock Text="ACTIVE" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource ThemeSuccessGreenBrush}"/>
+                                                </StackPanel>
+                                            </Border>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </Border>
+
+                        <!-- List Action Buttons -->
+                        <Grid ColumnDefinitions="Auto,Auto,Auto,*,Auto">
+                            <!-- Set Active Button -->
+                            <Button Grid.Column="0"
+                                    Classes="ActionPrimary"
+                                    Command="{Binding SetActiveNamespaceCommand}"
+                                    ToolTip.Tip="Set selected namespace as active (Enter or Alt+V)"
+                                    Padding="10,6"
+                                    Margin="0,0,8,0">
+                                <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                                    <TextBlock Text="✓" Foreground="{DynamicResource ThemeAccentForegroundBrush}"/>
+                                    <TextBlock Foreground="{DynamicResource ThemeAccentForegroundBrush}">
+                                        <Run>Set Acti</Run><Run TextDecorations="Underline">v</Run><Run>e</Run>
+                                    </TextBlock>
+                                    <Border IsVisible="{Binding ShowKeyboardHints}"
+                                            Background="#33FFFFFF"
+                                            CornerRadius="3"
+                                            Padding="4,1"
+                                            Margin="4,0,0,0">
+                                        <TextBlock Text="Alt+V" FontSize="9" FontWeight="Bold" Foreground="#FFFFFF"/>
+                                    </Border>
+                                </StackPanel>
+                            </Button>
+
+                            <!-- Edit Button -->
+                            <Button Grid.Column="1"
+                                    Command="{Binding StartEditCommand}"
+                                    ToolTip.Tip="Edit / Rename selected namespace (F2 or Alt+E)"
+                                    Padding="10,6"
+                                    CornerRadius="6"
+                                    Margin="0,0,8,0">
+                                <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                                    <TextBlock Text="✏️" FontSize="11" VerticalAlignment="Center"/>
+                                    <TextBlock VerticalAlignment="Center">
+                                        <Run TextDecorations="Underline">E</Run><Run>dit</Run>
+                                    </TextBlock>
+                                    <Border IsVisible="{Binding ShowKeyboardHints}"
+                                            Background="{DynamicResource ThemeBackgroundBrush}"
+                                            BorderBrush="{DynamicResource ThemeCardBorderBrush}"
+                                            BorderThickness="1"
+                                            CornerRadius="3"
+                                            Padding="4,1"
+                                            Margin="4,0,0,0">
+                                        <TextBlock Text="Alt+E" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource ThemeTextSecondaryBrush}"/>
+                                    </Border>
+                                </StackPanel>
+                            </Button>
+
+                            <!-- Delete Button -->
+                            <Button Grid.Column="2"
+                                    Classes="ActionDanger"
+                                    Command="{Binding DeleteNamespaceCommand}"
+                                    ToolTip.Tip="Remove selected namespace (Delete or Alt+R)"
+                                    Padding="10,6"
+                                    Margin="0,0,8,0">
+                                <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                                    <TextBlock Text="🗑️" FontSize="11" VerticalAlignment="Center"/>
+                                    <TextBlock>
+                                        <Run TextDecorations="Underline">R</Run><Run>emove</Run>
+                                    </TextBlock>
+                                    <Border IsVisible="{Binding ShowKeyboardHints}"
+                                            Background="#33FFFFFF"
+                                            CornerRadius="3"
+                                            Padding="4,1"
+                                            Margin="4,0,0,0">
+                                        <TextBlock Text="Alt+R" FontSize="9" FontWeight="Bold" Foreground="#FFFFFF"/>
+                                    </Border>
+                                </StackPanel>
+                            </Button>
+
+                            <!-- Auto-Discover Button -->
+                            <Button Grid.Column="4"
+                                    Command="{Binding DiscoverNamespacesCommand}"
+                                    IsEnabled="{Binding !IsDiscovering}"
+                                    ToolTip.Tip="Auto-discover Service Bus namespaces from Azure CLI (Alt+O)"
+                                    Padding="10,6"
+                                    CornerRadius="6">
+                                <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                                    <TextBlock Text="↻" FontWeight="Bold" VerticalAlignment="Center"/>
+                                    <TextBlock VerticalAlignment="Center">
+                                        <Run>Disc</Run><Run TextDecorations="Underline">o</Run><Run>ver</Run>
+                                    </TextBlock>
+                                    <Border IsVisible="{Binding ShowKeyboardHints}"
+                                            Background="{DynamicResource ThemeBackgroundBrush}"
+                                            BorderBrush="{DynamicResource ThemeCardBorderBrush}"
+                                            BorderThickness="1"
+                                            CornerRadius="3"
+                                            Padding="4,1"
+                                            Margin="4,0,0,0">
+                                        <TextBlock Text="Alt+O" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource ThemeTextSecondaryBrush}"/>
+                                    </Border>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- ADD OR EDIT CARD -->
+                <!-- A: ADD NEW NAMESPACE (Visible when NOT editing) -->
+                <Border Classes="Card" 
+                        Padding="16,14"
+                        IsVisible="{Binding !IsEditing}">
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="ADD NEW NAMESPACE" 
+                                   FontSize="11" 
+                                   FontWeight="Bold" 
+                                   Foreground="{DynamicResource ThemeTextMutedBrush}"
+                                   LetterSpacing="0.8"/>
+
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBox Grid.Column="0" 
+                                     x:Name="NewNamespaceTextBox"
+                                     Text="{Binding NewNamespaceInput}" 
+                                     Watermark="e.g. my-servicebus.servicebus.windows.net" 
+                                     Height="36"
+                                     CornerRadius="6"
+                                     Margin="0,0,10,0"/>
+
+                            <Button Grid.Column="1" 
+                                    Classes="ActionPrimary"
+                                    Command="{Binding AddNamespaceCommand}"
+                                    ToolTip.Tip="Add namespace (Enter or Alt+A)"
+                                    Height="36">
+                                <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                                    <TextBlock Text="+" FontWeight="Bold" Foreground="{DynamicResource ThemeAccentForegroundBrush}"/>
+                                    <TextBlock Foreground="{DynamicResource ThemeAccentForegroundBrush}">
+                                        <Run TextDecorations="Underline">A</Run><Run>dd</Run>
+                                    </TextBlock>
+                                    <Border IsVisible="{Binding ShowKeyboardHints}"
+                                            Background="#33FFFFFF"
+                                            CornerRadius="3"
+                                            Padding="4,1"
+                                            Margin="4,0,0,0">
+                                        <TextBlock Text="Alt+A" FontSize="9" FontWeight="Bold" Foreground="#FFFFFF"/>
+                                    </Border>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+
+                        <TextBlock Text="Tip: You can enter the full FQDN (.servicebus.windows.net) or just the namespace prefix."
+                                   FontSize="11"
+                                   Foreground="{DynamicResource ThemeTextMutedBrush}"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- B: EDIT NAMESPACE CARD (Visible when editing) -->
+                <Border Classes="Card" 
+                        Padding="16,14"
+                        BorderBrush="{DynamicResource ThemeAccentBrush}"
+                        BorderThickness="2"
+                        IsVisible="{Binding IsEditing}">
+                    <StackPanel Spacing="10">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Grid.Column="0" 
+                                       Text="EDIT / RENAME NAMESPACE" 
+                                       FontSize="11" 
+                                       FontWeight="Bold" 
+                                       Foreground="{DynamicResource ThemeAccentBrush}"
+                                       LetterSpacing="0.8"/>
+                            <TextBlock Grid.Column="1"
+                                       Text="{Binding EditingNamespaceOriginal, StringFormat='Editing: {0}'}"
+                                       FontSize="11"
+                                       Foreground="{DynamicResource ThemeTextMutedBrush}"/>
+                        </Grid>
+
+                        <TextBox x:Name="EditNamespaceTextBox"
+                                 Text="{Binding EditNamespaceInput}" 
+                                 Height="36"
+                                 CornerRadius="6"/>
+
+                        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                            <Button Classes="ActionPrimary"
+                                    Command="{Binding SaveEditCommand}"
+                                    ToolTip.Tip="Save changes (Enter or Alt+S)">
+                                <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                                    <TextBlock Text="💾" FontSize="11" VerticalAlignment="Center"/>
+                                    <TextBlock Foreground="{DynamicResource ThemeAccentForegroundBrush}">
+                                        <Run TextDecorations="Underline">S</Run><Run>ave</Run>
+                                    </TextBlock>
+                                    <Border IsVisible="{Binding ShowKeyboardHints}"
+                                            Background="#33FFFFFF"
+                                            CornerRadius="3"
+                                            Padding="4,1"
+                                            Margin="4,0,0,0">
+                                        <TextBlock Text="Alt+S" FontSize="9" FontWeight="Bold" Foreground="#FFFFFF"/>
+                                    </Border>
+                                </StackPanel>
+                            </Button>
+
+                            <Button Command="{Binding CancelEditCommand}"
+                                    ToolTip.Tip="Cancel editing (Esc or Alt+C)"
+                                    Padding="12,6"
+                                    CornerRadius="6">
+                                <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                                    <TextBlock Text="✕" FontSize="11" VerticalAlignment="Center"/>
+                                    <TextBlock>
+                                        <Run TextDecorations="Underline">C</Run><Run>ancel</Run>
+                                    </TextBlock>
+                                    <Border IsVisible="{Binding ShowKeyboardHints}"
+                                            Background="{DynamicResource ThemeBackgroundBrush}"
+                                            BorderBrush="{DynamicResource ThemeCardBorderBrush}"
+                                            BorderThickness="1"
+                                            CornerRadius="3"
+                                            Padding="4,1"
+                                            Margin="4,0,0,0">
+                                        <TextBlock Text="Esc" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource ThemeTextSecondaryBrush}"/>
+                                    </Border>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- 3. FOOTER ACTIONS -->
+        <Border Grid.Row="2" 
+                Margin="0,16,0,0" 
+                Padding="0,12,0,0" 
+                BorderBrush="{DynamicResource ThemeCardBorderBrush}" 
+                BorderThickness="0,1,0,0">
+            <Grid ColumnDefinitions="*,Auto">
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                    <TextBlock Text="⌨️" FontSize="12" VerticalAlignment="Center"/>
+                    <TextBlock Text="Shortcuts: ↑/↓: Navigate  •  Enter: Set Active  •  F2 / Alt+E: Edit  •  Del / Alt+R: Remove  •  Esc: Close" 
+                               FontSize="11" 
+                               Foreground="{DynamicResource ThemeTextMutedBrush}" 
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+                <Button Grid.Column="1" 
+                        Classes="ActionPrimary" 
+                        ToolTip.Tip="Done (Esc or Alt+D)"
+                        Click="OnCloseClicked">
+                    <TextBlock>
+                        <Run TextDecorations="Underline">D</Run><Run>one</Run>
+                    </TextBlock>
+                </Button>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

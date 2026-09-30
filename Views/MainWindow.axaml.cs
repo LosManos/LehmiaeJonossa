@@ -137,14 +137,32 @@ public partial class MainWindow : Window
                 }
             }
 
-            if (e.Key == Key.Space)
+            if (e.Key == Key.Enter || e.Key == Key.Space)
             {
                 var focused = FocusManager?.GetFocusedElement() as Visual;
                 if (focused is Button btn)
                 {
+                    if (btn.Name == "MenuAccountButton")
+                    {
+                        vm.OpenAccountDialog();
+                        e.Handled = true;
+                        return;
+                    }
+                    if (btn.Name == "MenuNamespacesButton")
+                    {
+                        vm.OpenNamespacesDialog();
+                        e.Handled = true;
+                        return;
+                    }
                     if (btn.Name == "MenuDemoButton")
                     {
                         vm.ToggleDemoMode();
+                        e.Handled = true;
+                        return;
+                    }
+                    if (btn.Name == "MenuThemeButton")
+                    {
+                        vm.ToggleThemeSubMenu();
                         e.Handled = true;
                         return;
                     }
@@ -154,47 +172,61 @@ public partial class MainWindow : Window
                         e.Handled = true;
                         return;
                     }
-                }
-            }
-
-            if (isAlt)
-            {
-                switch (e.Key)
-                {
-                    case Key.A:
-                        vm.OpenAccountDialog();
-                        e.Handled = true;
-                        return;
-                    case Key.D:
-                        vm.ToggleDemoMode();
-                        e.Handled = true;
-                        return;
-                    case Key.T:
-                        vm.ToggleThemeSubMenu();
-                        e.Handled = true;
-                        return;
-                    case Key.K:
-                    case Key.H:
-                        vm.ToggleKeyboardHints();
-                        e.Handled = true;
-                        return;
-                    case Key.L when vm.IsThemeSubMenuOpen:
-                        vm.SetTheme(Models.AppTheme.Light);
-                        e.Handled = true;
-                        return;
-                    case Key.G when vm.IsThemeSubMenuOpen:
-                        vm.SetTheme(Models.AppTheme.Lego);
-                        e.Handled = true;
-                        return;
-                    case Key.B when vm.IsThemeSubMenuOpen:
-                        vm.SetTheme(Models.AppTheme.Barbie);
-                        e.Handled = true;
-                        return;
-                    case Key.C:
+                    if (btn.Name == "MenuCloseButton")
+                    {
                         vm.CloseMenu();
                         e.Handled = true;
                         return;
+                    }
                 }
+            }
+
+            if (vm.IsThemeSubMenuOpen)
+            {
+                switch (e.Key)
+                {
+                    case Key.L:
+                        vm.SetTheme(Models.AppTheme.Light);
+                        e.Handled = true;
+                        return;
+                    case Key.G:
+                        vm.SetTheme(Models.AppTheme.Lego);
+                        e.Handled = true;
+                        return;
+                    case Key.B:
+                        vm.SetTheme(Models.AppTheme.Barbie);
+                        e.Handled = true;
+                        return;
+                }
+            }
+
+            switch (e.Key)
+            {
+                case Key.A:
+                    vm.OpenAccountDialog();
+                    e.Handled = true;
+                    return;
+                case Key.N:
+                    vm.OpenNamespacesDialog();
+                    e.Handled = true;
+                    return;
+                case Key.D:
+                    vm.ToggleDemoMode();
+                    e.Handled = true;
+                    return;
+                case Key.T:
+                    vm.ToggleThemeSubMenu();
+                    e.Handled = true;
+                    return;
+                case Key.K:
+                case Key.H:
+                    vm.ToggleKeyboardHints();
+                    e.Handled = true;
+                    return;
+                case Key.C:
+                    vm.CloseMenu();
+                    e.Handled = true;
+                    return;
             }
         }
 
@@ -203,6 +235,11 @@ public partial class MainWindow : Window
         {
             switch (e.Key)
             {
+                case Key.M:
+                    vm.OpenNamespacesDialog();
+                    e.Handled = true;
+                    return;
+
                 case Key.N:
                     var nsCombo = this.FindControl<ComboBox>("NamespaceComboBox");
                     nsCombo?.Focus();
@@ -309,6 +346,7 @@ public partial class MainWindow : Window
         }
 
         AddIfVisible("MenuAccountButton");
+        AddIfVisible("MenuNamespacesButton");
         AddIfVisible("MenuDemoButton");
         AddIfVisible("MenuThemeButton");
 
@@ -430,6 +468,7 @@ public partial class MainWindow : Window
         {
             vm.OpenInspectorWindowRequested += OnOpenInspectorWindowRequested;
             vm.OpenAccountDialogRequested += OnOpenAccountDialogRequested;
+            vm.OpenNamespacesDialogRequested += OnOpenNamespacesDialogRequested;
             vm.SettingsLoaded += OnSettingsLoaded;
 
             vm.PropertyChanged += (s, args) =>
@@ -458,6 +497,19 @@ public partial class MainWindow : Window
             DataContext = this.DataContext
         };
         dialog.ShowDialog(this);
+    }
+
+    private void OnOpenNamespacesDialogRequested()
+    {
+        if (DataContext is MainWindowViewModel vm)
+        {
+            var manageVm = vm.CreateManageNamespacesViewModel();
+            var dialog = new ManageNamespacesWindow
+            {
+                DataContext = manageVm
+            };
+            dialog.ShowDialog(this);
+        }
     }
 
     private void OnSettingsLoaded(AppSettings settings)

@@ -334,7 +334,7 @@
                                 <Button x:Name="MenuAccountButton"
                                         Classes="MenuItem" 
                                         Command="{Binding OpenAccountDialogCommand}"
-                                        ToolTip.Tip="Open Account &amp; Authentication dialog (Alt+A)">
+                                        ToolTip.Tip="Open Account &amp; Authentication dialog (A or Alt+A)">
                                     <Grid ColumnDefinitions="Auto,*,Auto">
                                         <TextBlock Grid.Column="0" Text="👤" FontSize="16" Margin="0,0,12,0" VerticalAlignment="Center"/>
                                         <StackPanel Grid.Column="1" VerticalAlignment="Center">
@@ -350,7 +350,27 @@
                                     </Grid>
                                 </Button>
 
-                                <!-- 2. DEMO TOGGLE MENU ITEM -->
+                                <!-- 2. NAMESPACES MENU ITEM -->
+                                <Button x:Name="MenuNamespacesButton"
+                                        Classes="MenuItem" 
+                                        Command="{Binding OpenNamespacesDialogCommand}"
+                                        ToolTip.Tip="Manage Service Bus namespaces (N or Alt+N)">
+                                    <Grid ColumnDefinitions="Auto,*,Auto">
+                                        <TextBlock Grid.Column="0" Text="☁️" FontSize="16" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <TextBlock FontWeight="SemiBold" FontSize="13" Foreground="{DynamicResource ThemeTextPrimaryBrush}">
+                                                <Run TextDecorations="Underline">N</Run><Run>amespaces</Run>
+                                            </TextBlock>
+                                            <TextBlock Text="{Binding SelectedNamespace, FallbackValue='Manage configured namespaces'}" 
+                                                       FontSize="11" 
+                                                       Foreground="{DynamicResource ThemeTextMutedBrush}" 
+                                                       TextTrimming="CharacterEllipsis"/>
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="2" Text="..." FontSize="15" FontWeight="Bold" Foreground="{DynamicResource ThemeTextMutedBrush}" VerticalAlignment="Center"/>
+                                    </Grid>
+                                </Button>
+
+                                <!-- 3. DEMO TOGGLE MENU ITEM -->
                                 <Button x:Name="MenuDemoButton"
                                         Classes="MenuItem" 
                                         Command="{Binding ToggleDemoModeCommand}"
@@ -527,6 +547,12 @@
                                     <TextBlock Grid.Column="0" Text="Focus Namespace" FontSize="11" Foreground="{DynamicResource ThemeTextSecondaryBrush}"/>
                                     <Border Grid.Column="1" Background="{DynamicResource ThemeBackgroundBrush}" CornerRadius="4" Padding="6,2">
                                         <TextBlock Text="Alt + N" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource ThemeTextPrimaryBrush}"/>
+                                    </Border>
+                                </Grid>
+                                <Grid ColumnDefinitions="*,Auto" Margin="0,2">
+                                    <TextBlock Grid.Column="0" Text="Manage Namespaces" FontSize="11" Foreground="{DynamicResource ThemeTextSecondaryBrush}"/>
+                                    <Border Grid.Column="1" Background="{DynamicResource ThemeBackgroundBrush}" CornerRadius="4" Padding="6,2">
+                                        <TextBlock Text="Menu &gt; N" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource ThemeTextPrimaryBrush}"/>
                                     </Border>
                                 </Grid>
                                 <Grid ColumnDefinitions="*,Auto" Margin="0,2">

@@ -438,6 +438,7 @@ public partial class MainWindowViewModel : ViewModelBase
     public event Action<AppSettings>? SettingsLoaded;
     public event Action<MessageInspectorViewModel>? OpenInspectorWindowRequested;
     public event Action? OpenAccountDialogRequested;
+    public event Action? OpenNamespacesDialogRequested;
 
     public bool IsLightThemeSelected => SelectedTheme == AppTheme.Light;
     public bool IsDarkThemeSelected => SelectedTheme == AppTheme.Dark;
@@ -499,6 +500,26 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         CloseMenu();
         OpenAccountDialogRequested?.Invoke();
+    }
+
+    [RelayCommand]
+    public void OpenNamespacesDialog()
+    {
+        CloseMenu();
+        OpenNamespacesDialogRequested?.Invoke();
+    }
+
+    public ManageNamespacesViewModel CreateManageNamespacesViewModel()
+    {
+        return new ManageNamespacesViewModel(
+            Namespaces,
+            SelectedNamespace,
+            _configService,
+            _settings,
+            _monitorService,
+            ShowKeyboardHints,
+            ns => SelectedNamespace = ns
+        );
     }
 
     [RelayCommand]
