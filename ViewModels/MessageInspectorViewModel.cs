@@ -77,10 +77,16 @@ public partial class MessageInspectorViewModel : ViewModelBase
 
     public async Task OpenForEntityAsync(ServiceBusEntityMetric entity)
     {
-        EntityName = entity.Name;
+        EntityName = !string.IsNullOrWhiteSpace(entity.TopicName)
+            ? entity.TopicName
+            : (entity.Kind == Models.EntityKind.TopicSubscription && entity.Name.Contains('/')
+                ? entity.Name.Split('/', 2)[0]
+                : entity.Name);
         EntityDisplayName = entity.DisplayName;
         EntityKind = entity.KindDisplay;
-        SubscriptionName = entity.SubscriptionName;
+        SubscriptionName = entity.SubscriptionName ?? (entity.Kind == Models.EntityKind.TopicSubscription && entity.Name.Contains('/')
+            ? entity.Name.Split('/', 2)[1]
+            : null);
         DeadLetterCount = entity.DeadLetterMessageCount;
         IsOpen = true;
         ErrorMessage = null;
@@ -142,6 +148,7 @@ public partial class MessageInspectorViewModel : ViewModelBase
 
         try
         {
+            using var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(30));
             long? fromSeq = (_pageStartSequenceNumbers.Count >= CurrentPage)
                 ? _pageStartSequenceNumbers[CurrentPage - 1]
                 : null;
@@ -150,7 +157,8 @@ public partial class MessageInspectorViewModel : ViewModelBase
                 EntityName, 
                 SubscriptionName, 
                 fromSequenceNumber: fromSeq, 
-                maxMessages: PageSize);
+                maxMessages: PageSize,
+                ct: cts.Token);
 
             foreach (var msg in results)
             {
@@ -160,6 +168,11 @@ public partial class MessageInspectorViewModel : ViewModelBase
             SelectedMessage = Messages.FirstOrDefault();
             HasNextPage = results.Count == PageSize;
             OnPropertyChanged(nameof(PageInfoDisplay));
+        }
+        catch (OperationCanceledException)
+        {
+            ErrorMessage = "Operation timed out while peeking messages. Please verify broker connectivity.";
+            HasNextPage = false;
         }
         catch (Exception ex)
         {

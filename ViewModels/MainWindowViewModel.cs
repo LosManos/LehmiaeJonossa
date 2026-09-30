@@ -460,8 +460,9 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         if (entity == null) return;
         Inspector.ShowKeyboardHints = ShowKeyboardHints;
-        await Inspector.OpenForEntityAsync(entity);
+        var openTask = Inspector.OpenForEntityAsync(entity);
         OpenInspectorWindowRequested?.Invoke(Inspector);
+        await openTask;
     }
 
     [RelayCommand]

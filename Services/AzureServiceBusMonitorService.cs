@@ -58,7 +58,14 @@ public class AzureServiceBusMonitorService : IServiceBusMonitorService, IAsyncDi
         try
         {
             _adminClient = new ServiceBusAdministrationClient(fqdn, _credential);
-            _busClient = new ServiceBusClient(fqdn, _credential);
+            _busClient = new ServiceBusClient(fqdn, _credential, new ServiceBusClientOptions
+            {
+                RetryOptions = new ServiceBusRetryOptions
+                {
+                    TryTimeout = TimeSpan.FromSeconds(30),
+                    MaxRetries = 2
+                }
+            });
             CurrentNamespace = fqdn;
             IsDemoMode = false;
 
@@ -209,9 +216,23 @@ public class AzureServiceBusMonitorService : IServiceBusMonitorService, IAsyncDi
         int maxMessages = 20, 
         CancellationToken ct = default)
     {
+        var resolvedEntityName = entityName;
+        var resolvedSubscriptionName = subscriptionName;
+
+        // If the entity name is formatted as "topicName/subscriptionName", extract the components
+        if (resolvedEntityName.Contains('/'))
+        {
+            var parts = resolvedEntityName.Split('/', 2);
+            resolvedEntityName = parts[0];
+            if (string.IsNullOrWhiteSpace(resolvedSubscriptionName))
+            {
+                resolvedSubscriptionName = parts[1];
+            }
+        }
+
         if (IsDemoMode || _busClient == null)
         {
-            return GetDemoDeadLetterMessages(entityName, subscriptionName, fromSequenceNumber, maxMessages);
+            return GetDemoDeadLetterMessages(resolvedEntityName, resolvedSubscriptionName, fromSequenceNumber, maxMessages);
         }
 
         ServiceBusReceiver receiver;
@@ -221,13 +242,13 @@ public class AzureServiceBusMonitorService : IServiceBusMonitorService, IAsyncDi
             ReceiveMode = ServiceBusReceiveMode.PeekLock
         };
 
-        if (string.IsNullOrWhiteSpace(subscriptionName))
+        if (string.IsNullOrWhiteSpace(resolvedSubscriptionName))
         {
-            receiver = _busClient.CreateReceiver(entityName, receiverOptions);
+            receiver = _busClient.CreateReceiver(resolvedEntityName, receiverOptions);
         }
         else
         {
-            receiver = _busClient.CreateReceiver(entityName, subscriptionName, receiverOptions);
+            receiver = _busClient.CreateReceiver(resolvedEntityName, resolvedSubscriptionName, receiverOptions);
         }
 
         await using (receiver)

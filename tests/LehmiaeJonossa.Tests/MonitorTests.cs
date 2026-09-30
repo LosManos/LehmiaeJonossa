@@ -538,6 +538,74 @@ public class MonitorTests
         Assert.Equal(initial, vm.IsDemoMode);
         Assert.Equal(initial ? "ON" : "OFF", vm.DemoModeStatusText);
     }
+
+    [Fact]
+    public async Task MessageInspectorViewModel_OpenForEntity_TopicSubscription_ResolvesEntityAndSubscriptionCorrectly()
+    {
+        var service = new AzureServiceBusMonitorService();
+        service.SetDemoMode(true);
+
+        var vm = new MessageInspectorViewModel(service)
+        {
+            PageSize = 10
+        };
+
+        var metric = new ServiceBusEntityMetric
+        {
+            Name = "payment-events/audit-sub",
+            Kind = EntityKind.TopicSubscription,
+            TopicName = "payment-events",
+            SubscriptionName = "audit-sub",
+            DeadLetterMessageCount = 14
+        };
+
+        await vm.OpenForEntityAsync(metric);
+
+        Assert.Equal("payment-events", vm.EntityName);
+        Assert.Equal("audit-sub", vm.SubscriptionName);
+        Assert.Equal("payment-events / audit-sub", vm.EntityDisplayName);
+        Assert.Equal("Topic Subscription", vm.EntityKind);
+        Assert.NotEmpty(vm.Messages);
+        Assert.False(string.IsNullOrEmpty(vm.Messages[0].MessageId));
+    }
+
+    [Fact]
+    public async Task MessageInspectorViewModel_OpenForEntity_TopicSubscriptionWithoutExplicitTopicName_SplitsFromName()
+    {
+        var service = new AzureServiceBusMonitorService();
+        service.SetDemoMode(true);
+
+        var vm = new MessageInspectorViewModel(service);
+
+        var metric = new ServiceBusEntityMetric
+        {
+            Name = "customer-events/crm-subscriber",
+            Kind = EntityKind.TopicSubscription,
+            DeadLetterMessageCount = 5
+        };
+
+        await vm.OpenForEntityAsync(metric);
+
+        Assert.Equal("customer-events", vm.EntityName);
+        Assert.Equal("crm-subscriber", vm.SubscriptionName);
+        Assert.NotEmpty(vm.Messages);
+    }
+
+    [Fact]
+    public async Task MonitorService_PeekDeadLetterMessagesAsync_ResolvesSlashFormattedEntityName()
+    {
+        var service = new AzureServiceBusMonitorService();
+        service.SetDemoMode(true);
+
+        // Call with slash-formatted entity name and null subscription
+        var messages = await service.PeekDeadLetterMessagesAsync("payment-events/audit-sub", null, maxMessages: 5);
+
+        Assert.NotNull(messages);
+        Assert.NotEmpty(messages);
+        Assert.Contains("payment-events", messages[0].DeadLetterErrorDescription);
+        Assert.Contains("audit-sub", messages[0].DeadLetterErrorDescription);
+    }
 }
+
 
 
