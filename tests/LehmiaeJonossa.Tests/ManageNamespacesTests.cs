@@ -9,25 +9,12 @@ using LehmiaeJonossa.ViewModels;
 
 namespace LehmiaeJonossa.Tests;
 
-public class MockConfigurationService : IConfigurationService
-{
-    public AppSettings SavedSettings { get; set; } = new();
-
-    public Task<AppSettings> LoadSettingsAsync() => Task.FromResult(SavedSettings);
-
-    public Task SaveSettingsAsync(AppSettings settings)
-    {
-        SavedSettings = settings;
-        return Task.CompletedTask;
-    }
-}
-
 public class ManageNamespacesTests
 {
     [Fact]
     public void MainWindowViewModel_OpenNamespacesDialogCommand_ClosesMenuAndRaisesEvent()
     {
-        var vm = new MainWindowViewModel();
+        var vm = new MainWindowViewModel(new AzureServiceBusMonitorService(), new MockConfigurationService(), new ThemeService());
         vm.IsMenuOpen = true;
 
         bool eventRaised = false;

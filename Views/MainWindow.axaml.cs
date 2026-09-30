@@ -189,6 +189,11 @@ public partial class MainWindow : Window
                         vm.SetTheme(Models.AppTheme.Light);
                         e.Handled = true;
                         return;
+                    case Key.K:
+                    case Key.D:
+                        vm.SetTheme(Models.AppTheme.Dark);
+                        e.Handled = true;
+                        return;
                     case Key.G:
                         vm.SetTheme(Models.AppTheme.Lego);
                         e.Handled = true;

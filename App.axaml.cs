@@ -25,9 +25,19 @@ public partial class App : Application
             // Avoid duplicate validations from both Avalonia and the CommunityToolkit. 
             // More info: https://docs.avaloniaui.net/docs/guides/development-guides/data-validation#manage-validationplugins
             DisableAvaloniaDataAnnotationValidation();
+
+            var configService = new ConfigurationService();
+            var settings = configService.LoadSettings();
+
+            var themeService = new ThemeService();
+            themeService.ApplyTheme(settings.Theme);
+
             desktop.MainWindow = new MainWindow
             {
-                DataContext = new MainWindowViewModel(),
+                DataContext = new MainWindowViewModel(
+                    new AzureServiceBusMonitorService(),
+                    configService,
+                    themeService),
             };
 
             // Ensure the macOS Dock icon is updated even when running in dev mode via 'dotnet run'

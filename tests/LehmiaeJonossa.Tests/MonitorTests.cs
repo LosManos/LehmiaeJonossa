@@ -396,10 +396,23 @@ public class MonitorTests
         Assert.Contains(nameof(ServiceBusEntityMetric.HotlistInspectButtonToolTip), changedProps);
     }
 
+    private static MainWindowViewModel CreateTestMainWindowViewModel(AppSettings? settings = null)
+    {
+        var mockConfig = new MockConfigurationService();
+        if (settings != null)
+        {
+            mockConfig.SavedSettings = settings;
+        }
+        return new MainWindowViewModel(
+            new AzureServiceBusMonitorService(),
+            mockConfig,
+            new ThemeService());
+    }
+
     [Fact]
     public void MainWindowViewModel_MenuState_TogglesAndClosesCorrectly()
     {
-        var vm = new MainWindowViewModel();
+        var vm = CreateTestMainWindowViewModel();
         Assert.False(vm.IsMenuOpen);
 
         vm.ToggleMenu();
@@ -418,7 +431,7 @@ public class MonitorTests
     [Fact]
     public void MainWindowViewModel_AccountDialogCommand_ClosesMenuAndRaisesEvent()
     {
-        var vm = new MainWindowViewModel();
+        var vm = CreateTestMainWindowViewModel();
         vm.IsMenuOpen = true;
 
         bool eventRaised = false;
@@ -433,7 +446,7 @@ public class MonitorTests
     [Fact]
     public void MainWindowViewModel_ThemeSubMenu_UpdatesThemeAndFlags()
     {
-        var vm = new MainWindowViewModel();
+        var vm = CreateTestMainWindowViewModel();
         
         vm.SetThemeCommand.Execute(AppTheme.Dark);
         Assert.Equal(AppTheme.Dark, vm.SelectedTheme);
@@ -450,9 +463,26 @@ public class MonitorTests
     }
 
     [Fact]
+    public void MainWindowViewModel_ThemeSetting_IsPersistedToConfig()
+    {
+        var mockConfig = new MockConfigurationService();
+        var themeService = new ThemeService();
+        var vm = new MainWindowViewModel(
+            new AzureServiceBusMonitorService(),
+            mockConfig,
+            themeService);
+
+        vm.SetThemeCommand.Execute(AppTheme.Dark);
+        Assert.Equal(AppTheme.Dark, mockConfig.SavedSettings.Theme);
+
+        vm.SetThemeCommand.Execute(AppTheme.Barbie);
+        Assert.Equal(AppTheme.Barbie, mockConfig.SavedSettings.Theme);
+    }
+
+    [Fact]
     public void MainWindowViewModel_DemoModeStatusText_ReflectsToggle()
     {
-        var vm = new MainWindowViewModel();
+        var vm = CreateTestMainWindowViewModel();
         vm.IsDemoMode = false;
         Assert.Equal("OFF", vm.DemoModeStatusText);
 
@@ -464,7 +494,7 @@ public class MonitorTests
     [Fact]
     public void MainWindowViewModel_ToggleThemeSubMenu_TogglesAndResetsOnClose()
     {
-        var vm = new MainWindowViewModel();
+        var vm = CreateTestMainWindowViewModel();
         Assert.False(vm.IsThemeSubMenuOpen);
 
         vm.ToggleThemeSubMenuCommand.Execute(null);
@@ -488,7 +518,7 @@ public class MonitorTests
     [Fact]
     public void MainWindowViewModel_ShowKeyboardHints_TogglesStatusTextAndSyncsInspector()
     {
-        var vm = new MainWindowViewModel();
+        var vm = CreateTestMainWindowViewModel();
         Assert.True(vm.ShowKeyboardHints);
         Assert.Equal("ON", vm.KeyboardHintsStatusText);
         Assert.True(vm.Inspector.ShowKeyboardHints);
@@ -527,7 +557,7 @@ public class MonitorTests
     [Fact]
     public void MainWindowViewModel_ToggleDemoMode_TogglesStateAndStatusText()
     {
-        var vm = new MainWindowViewModel();
+        var vm = CreateTestMainWindowViewModel();
         var initial = vm.IsDemoMode;
 
         vm.ToggleDemoModeCommand.Execute(null);
@@ -604,6 +634,40 @@ public class MonitorTests
         Assert.NotEmpty(messages);
         Assert.Contains("payment-events", messages[0].DeadLetterErrorDescription);
         Assert.Contains("audit-sub", messages[0].DeadLetterErrorDescription);
+    }
+
+    [Fact]
+    public async Task ConfigurationService_IsolatedDirectory_SavesAndLoadsThemeSuccessfully()
+    {
+        var tempDir = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "test-config-" + System.Guid.NewGuid().ToString("N"));
+        try
+        {
+            var configService = new ConfigurationService(tempDir);
+            var settings = new AppSettings
+            {
+                Theme = AppTheme.Dark,
+                SelectedNamespace = "test-namespace"
+            };
+
+            await configService.SaveSettingsAsync(settings);
+
+            // Test sync load
+            var loadedSync = configService.LoadSettings();
+            Assert.Equal(AppTheme.Dark, loadedSync.Theme);
+            Assert.Equal("test-namespace", loadedSync.SelectedNamespace);
+
+            // Test async load
+            var loadedAsync = await configService.LoadSettingsAsync();
+            Assert.Equal(AppTheme.Dark, loadedAsync.Theme);
+            Assert.Equal("test-namespace", loadedAsync.SelectedNamespace);
+        }
+        finally
+        {
+            if (System.IO.Directory.Exists(tempDir))
+            {
+                System.IO.Directory.Delete(tempDir, true);
+            }
+        }
     }
 }
 

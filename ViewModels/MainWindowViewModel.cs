@@ -21,6 +21,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private List<ServiceBusEntityMetric> _rawEntities = new();
     private AppSettings _settings = new();
+    private bool _isInitializing = false;
     private int _countdownSeconds = 60;
 
     [ObservableProperty]
@@ -124,6 +125,7 @@ public partial class MainWindowViewModel : ViewModelBase
         _themeService = themeService;
 
         Inspector = new MessageInspectorViewModel(_monitorService);
+        _selectedTheme = _themeService.CurrentTheme;
 
         _refreshTimer = new DispatcherTimer
         {
@@ -137,6 +139,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private async Task InitializeAsync()
     {
+        _isInitializing = true;
         IsBusy = true;
         StatusMessage = "Loading settings & discovering Azure namespaces...";
 
@@ -238,6 +241,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
         finally
         {
+            _isInitializing = false;
             IsBusy = false;
         }
     }
@@ -245,8 +249,11 @@ public partial class MainWindowViewModel : ViewModelBase
     partial void OnSelectedThemeChanged(AppTheme value)
     {
         _themeService.ApplyTheme(value);
-        _settings.Theme = value;
-        _ = _configService.SaveSettingsAsync(_settings);
+        if (!_isInitializing)
+        {
+            _settings.Theme = value;
+            _ = _configService.SaveSettingsAsync(_settings);
+        }
         OnPropertyChanged(nameof(IsLightThemeSelected));
         OnPropertyChanged(nameof(IsDarkThemeSelected));
         OnPropertyChanged(nameof(IsLegoThemeSelected));
@@ -255,16 +262,22 @@ public partial class MainWindowViewModel : ViewModelBase
 
     partial void OnSelectedAuthModeChanged(AuthMode value)
     {
-        _settings.AuthMode = value;
-        _ = _configService.SaveSettingsAsync(_settings);
+        if (!_isInitializing)
+        {
+            _settings.AuthMode = value;
+            _ = _configService.SaveSettingsAsync(_settings);
+        }
         _ = ConnectAndRefreshAsync();
     }
 
     partial void OnSelectedNamespaceChanged(string value)
     {
         if (string.IsNullOrWhiteSpace(value)) return;
-        _settings.SelectedNamespace = value;
-        _ = _configService.SaveSettingsAsync(_settings);
+        if (!_isInitializing)
+        {
+            _settings.SelectedNamespace = value;
+            _ = _configService.SaveSettingsAsync(_settings);
+        }
         _ = ConnectAndRefreshAsync();
     }
 

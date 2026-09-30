@@ -19,6 +19,10 @@ public class ThemeService : IThemeService
         CurrentTheme = theme;
         if (Application.Current == null) return;
 
+        Application.Current.RequestedThemeVariant = theme == AppTheme.Dark
+            ? Avalonia.Styling.ThemeVariant.Dark
+            : Avalonia.Styling.ThemeVariant.Light;
+
         var targetUri = theme switch
         {
             AppTheme.Dark => DarkUri,
