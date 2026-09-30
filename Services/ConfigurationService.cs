@@ -2,9 +2,9 @@ using System;
 using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
-using AzureDeadLetterMonitor.Models;
+using LehmiaeJonossa.Models;
 
-namespace AzureDeadLetterMonitor.Services;
+namespace LehmiaeJonossa.Services;
 
 public class ConfigurationService : IConfigurationService
 {
@@ -15,7 +15,7 @@ public class ConfigurationService : IConfigurationService
     public ConfigurationService()
     {
         var userHome = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-        _configDirectory = Path.Combine(userHome, ".azure-dead-letter-monitor");
+        _configDirectory = Path.Combine(userHome, ".lehmiae-jonossa");
         _configFilePath = Path.Combine(_configDirectory, "config.json");
     }
 

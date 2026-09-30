@@ -4,9 +4,10 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.VisualTree;
-using AzureDeadLetterMonitor.ViewModels;
+using LehmiaeJonossa.Models;
+using LehmiaeJonossa.ViewModels;
 
-namespace AzureDeadLetterMonitor.Views;
+namespace LehmiaeJonossa.Views;
 
 public partial class MainWindow : Window
 {
@@ -459,7 +460,7 @@ public partial class MainWindow : Window
         dialog.ShowDialog(this);
     }
 
-    private void OnSettingsLoaded(AzureDeadLetterMonitor.Models.AppSettings settings)
+    private void OnSettingsLoaded(AppSettings settings)
     {
         if (settings.MessageDetailWindowWidth.HasValue)
             MessageDetailWindow.SavedWidth = settings.MessageDetailWindowWidth.Value;

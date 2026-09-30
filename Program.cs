@@ -1,7 +1,7 @@
-﻿using Avalonia;
+using Avalonia;
 using System;
 
-namespace AzureDeadLetterMonitor;
+namespace LehmiaeJonossa;
 
 sealed class Program
 {

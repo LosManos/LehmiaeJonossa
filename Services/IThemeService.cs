@@ -1,6 +1,6 @@
-using AzureDeadLetterMonitor.Models;
+using LehmiaeJonossa.Models;
 
-namespace AzureDeadLetterMonitor.Services;
+namespace LehmiaeJonossa.Services;
 
 public interface IThemeService
 {

@@ -1,4 +1,4 @@
-namespace AzureDeadLetterMonitor.Models;
+namespace LehmiaeJonossa.Models;
 
 public enum AppTheme
 {

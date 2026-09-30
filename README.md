@@ -1,4 +1,4 @@
-# Azure Dead Letter Monitor
+# LehmiaeJonossa
 
 A high-performance cross-platform desktop monitor built with **.NET 10** and **Avalonia UI** for **macOS** and **Windows**, designed to give cloud and DevOps engineers an instant situational overview of dead-lettered messages in Azure Service Bus.
 
@@ -37,7 +37,7 @@ A high-performance cross-platform desktop monitor built with **.NET 10** and **A
   - Arrow-key selection and `Cmd+Arrows` navigation throughout the Dead Letter Inspector and Message Detail windows.
   - Context-aware shortcut footers in each window, toggleable on/off directly from the menu.
 - **💾 Local Configuration Persistence**:
-  - Configured namespaces, preferred themes, keyboard hint preferences, and Demo Mode state saved in `~/.azure-dead-letter-monitor/config.json`.
+  - Configured namespaces, preferred themes, keyboard hint preferences, and Demo Mode state saved in `~/.lehmiae-jonossa/config.json`.
 - **🧪 Built-in Demo Mode**:
   - Toggle between live Azure Service Bus telemetry and realistic mock data with multi-page demo dead letters to preview workflows without live cloud resources (state persisted across application restarts).
 
@@ -109,7 +109,7 @@ The entire application can be navigated without touching a mouse.
 
 ### 1. Clone & Build
 ```bash
-cd AzureDeadLetterMonitor
+cd LehmiaeJonossa
 dotnet build
 ```
 
@@ -120,7 +120,7 @@ dotnet test
 
 ### 3. Launch the Application
 ```bash
-dotnet run --project AzureDeadLetterMonitor.csproj
+dotnet run --project LehmiaeJonossa.csproj
 ```
 
 ---
@@ -144,7 +144,7 @@ The application will automatically pick up your credentials through `DefaultAzur
 ## Project Architecture
 
 ```
-AzureDeadLetterMonitor/
+LehmiaeJonossa/
 ├── Models/
 │   ├── AppSettings.cs              # Saved namespaces, theme, and auth configuration
 │   ├── AppTheme.cs                 # Light, Dark, Lego, Barbie enum
@@ -154,7 +154,7 @@ AzureDeadLetterMonitor/
 │   ├── IServiceBusMonitorService.cs
 │   ├── AzureServiceBusMonitorService.cs # Azure Service Bus Admin & Client integration with pagination
 │   ├── IConfigurationService.cs
-│   ├── ConfigurationService.cs     # Local ~/.azure-dead-letter-monitor/config.json
+│   ├── ConfigurationService.cs     # Local ~/.lehmiae-jonossa/config.json
 │   ├── IThemeService.cs
 │   └── ThemeService.cs             # Dynamic Avalonia ResourceDictionary switcher
 ├── Themes/
@@ -175,7 +175,7 @@ AzureDeadLetterMonitor/
 │   ├── MessageDetailWindow.axaml            # Proper message detail window
 │   └── MessageDetailWindow.axaml.cs
 └── tests/
-    └── AzureDeadLetterMonitor.Tests/
+    └── LehmiaeJonossa.Tests/
         └── MonitorTests.cs         # Automated unit tests
 ```
 

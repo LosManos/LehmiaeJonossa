@@ -1,7 +1,7 @@
 using System;
 using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace AzureDeadLetterMonitor.Models;
+namespace LehmiaeJonossa.Models;
 
 public enum EntityKind
 {

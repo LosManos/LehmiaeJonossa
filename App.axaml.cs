@@ -5,11 +5,11 @@ using Avalonia.Data.Core.Plugins;
 using System.Linq;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
-using AzureDeadLetterMonitor.Services;
-using AzureDeadLetterMonitor.ViewModels;
-using AzureDeadLetterMonitor.Views;
+using LehmiaeJonossa.Services;
+using LehmiaeJonossa.ViewModels;
+using LehmiaeJonossa.Views;
 
-namespace AzureDeadLetterMonitor;
+namespace LehmiaeJonossa;
 
 public partial class App : Application
 {

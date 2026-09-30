@@ -1,6 +1,0 @@
-<Solution>
-  <Folder Name="/tests/">
-    <Project Path="tests/AzureDeadLetterMonitor.Tests/AzureDeadLetterMonitor.Tests.csproj" />
-  </Folder>
-  <Project Path="AzureDeadLetterMonitor.csproj" />
-</Solution>

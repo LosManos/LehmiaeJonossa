@@ -3,11 +3,11 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
-using AzureDeadLetterMonitor.Models;
-using AzureDeadLetterMonitor.Services;
-using AzureDeadLetterMonitor.ViewModels;
+using LehmiaeJonossa.Models;
+using LehmiaeJonossa.Services;
+using LehmiaeJonossa.ViewModels;
 
-namespace AzureDeadLetterMonitor.Tests;
+namespace LehmiaeJonossa.Tests;
 
 public class MonitorTests
 {

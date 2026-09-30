@@ -7,9 +7,9 @@ using Azure.Core;
 using Azure.Identity;
 using Azure.Messaging.ServiceBus;
 using Azure.Messaging.ServiceBus.Administration;
-using AzureDeadLetterMonitor.Models;
+using LehmiaeJonossa.Models;
 
-namespace AzureDeadLetterMonitor.Services;
+namespace LehmiaeJonossa.Services;
 
 public class AzureServiceBusMonitorService : IServiceBusMonitorService, IAsyncDisposable
 {

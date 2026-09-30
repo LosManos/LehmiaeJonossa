@@ -3,9 +3,9 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
-using AzureDeadLetterMonitor.ViewModels;
+using LehmiaeJonossa.ViewModels;
 
-namespace AzureDeadLetterMonitor.Views;
+namespace LehmiaeJonossa.Views;
 
 public partial class MessageDetailWindow : Window
 {

@@ -1,15 +1,15 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vm="using:AzureDeadLetterMonitor.ViewModels"
-        xmlns:models="using:AzureDeadLetterMonitor.Models"
+        xmlns:vm="using:LehmiaeJonossa.ViewModels"
+        xmlns:models="using:LehmiaeJonossa.Models"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="850"
-        x:Class="AzureDeadLetterMonitor.Views.MainWindow"
+        x:Class="LehmiaeJonossa.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         x:Name="RootWindow"
         Icon="/Assets/app-icon.ico"
-        Title="Azure Dead Letter Monitor"
+        Title="LehmiaeJonossa"
         Width="1280" Height="860"
         MinWidth="960" MinHeight="650"
         Background="{DynamicResource ThemeBackgroundBrush}">
@@ -146,7 +146,7 @@
                     </Button>
 
                     <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="Azure Dead Letter Monitor" 
+                        <TextBlock Text="LehmiaeJonossa" 
                                    FontSize="17" 
                                    FontWeight="Bold" 
                                    Foreground="{DynamicResource ThemeTextPrimaryBrush}"/>

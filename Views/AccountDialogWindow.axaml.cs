@@ -3,7 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 
-namespace AzureDeadLetterMonitor.Views;
+namespace LehmiaeJonossa.Views;
 
 public partial class AccountDialogWindow : Window
 {

@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using AzureDeadLetterMonitor.Models;
-using AzureDeadLetterMonitor.Services;
+using LehmiaeJonossa.Models;
+using LehmiaeJonossa.Services;
 
-namespace AzureDeadLetterMonitor.ViewModels;
+namespace LehmiaeJonossa.ViewModels;
 
 public partial class MainWindowViewModel : ViewModelBase
 {

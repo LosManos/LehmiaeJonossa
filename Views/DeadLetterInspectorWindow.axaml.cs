@@ -3,10 +3,10 @@ using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
-using AzureDeadLetterMonitor.Models;
-using AzureDeadLetterMonitor.ViewModels;
+using LehmiaeJonossa.Models;
+using LehmiaeJonossa.ViewModels;
 
-namespace AzureDeadLetterMonitor.Views;
+namespace LehmiaeJonossa.Views;
 
 public partial class DeadLetterInspectorWindow : Window
 {

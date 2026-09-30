@@ -3,7 +3,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using Avalonia.Platform;
 
-namespace AzureDeadLetterMonitor.Services;
+namespace LehmiaeJonossa.Services;
 
 /// <summary>
 /// Helper to set the macOS Dock icon dynamically at runtime (especially useful during development
@@ -103,7 +103,7 @@ public static class MacDockIconHelper
         // 1. Primary: Load from Avalonia embedded resource assets (compiled into assembly)
         try
         {
-            var uri = new Uri("avares://AzureDeadLetterMonitor/Assets/app-icon.png");
+            var uri = new Uri("avares://LehmiaeJonossa/Assets/app-icon.png");
             if (AssetLoader.Exists(uri))
             {
                 using var stream = AssetLoader.Open(uri);

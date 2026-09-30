@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using AzureDeadLetterMonitor.Models;
+using LehmiaeJonossa.Models;
 
-namespace AzureDeadLetterMonitor.Services;
+namespace LehmiaeJonossa.Services;
 
 public interface IServiceBusMonitorService
 {

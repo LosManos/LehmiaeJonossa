@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json;
 
-namespace AzureDeadLetterMonitor.Models;
+namespace LehmiaeJonossa.Models;
 
 public class DeadLetterMessageDetail
 {

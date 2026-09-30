@@ -1,16 +1,16 @@
 using System;
 using Avalonia;
 using Avalonia.Markup.Xaml.Styling;
-using AzureDeadLetterMonitor.Models;
+using LehmiaeJonossa.Models;
 
-namespace AzureDeadLetterMonitor.Services;
+namespace LehmiaeJonossa.Services;
 
 public class ThemeService : IThemeService
 {
-    private static readonly Uri LightUri = new("avares://AzureDeadLetterMonitor/Themes/LightTheme.axaml");
-    private static readonly Uri DarkUri = new("avares://AzureDeadLetterMonitor/Themes/DarkTheme.axaml");
-    private static readonly Uri LegoUri = new("avares://AzureDeadLetterMonitor/Themes/LegoTheme.axaml");
-    private static readonly Uri BarbieUri = new("avares://AzureDeadLetterMonitor/Themes/BarbieTheme.axaml");
+    private static readonly Uri LightUri = new("avares://LehmiaeJonossa/Themes/LightTheme.axaml");
+    private static readonly Uri DarkUri = new("avares://LehmiaeJonossa/Themes/DarkTheme.axaml");
+    private static readonly Uri LegoUri = new("avares://LehmiaeJonossa/Themes/LegoTheme.axaml");
+    private static readonly Uri BarbieUri = new("avares://LehmiaeJonossa/Themes/BarbieTheme.axaml");
 
     public AppTheme CurrentTheme { get; private set; } = AppTheme.Light;
 

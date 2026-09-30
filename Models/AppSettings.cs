@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace AzureDeadLetterMonitor.Models;
+namespace LehmiaeJonossa.Models;
 
 public enum AuthMode
 {

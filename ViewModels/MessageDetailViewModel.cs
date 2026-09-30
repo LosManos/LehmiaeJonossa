@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using AzureDeadLetterMonitor.Models;
+using LehmiaeJonossa.Models;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
-namespace AzureDeadLetterMonitor.ViewModels;
+namespace LehmiaeJonossa.ViewModels;
 
 public partial class MessageDetailViewModel : ViewModelBase
 {
