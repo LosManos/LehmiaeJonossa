@@ -742,17 +742,33 @@
                                 </StackPanel>
                             </StackPanel>
 
-                            <Border Grid.Column="1" 
-                                    Background="{DynamicResource ThemeAlertRedBackgroundBrush}" 
-                                    BorderBrush="{DynamicResource ThemeAlertRedBorderBrush}" 
-                                    BorderThickness="1" 
-                                    CornerRadius="12" 
-                                    Padding="10,4">
-                                <TextBlock Text="{Binding EntitiesRequiringAttentionCount, StringFormat='{}{0} Issues Pending'}" 
-                                           FontWeight="Bold" 
-                                           FontSize="12" 
-                                           Foreground="{DynamicResource ThemeAlertRedBrush}"/>
-                            </Border>
+                            <Panel Grid.Column="1" VerticalAlignment="Center">
+                                <!-- Clean / No Issues: Non-warning Green Theme (matches 'All clean!' box) -->
+                                <Border IsVisible="{Binding !HasDeadLettersDetected}" 
+                                        Background="{DynamicResource ThemeSuccessGreenBackgroundBrush}" 
+                                        BorderBrush="{DynamicResource ThemeSuccessGreenBorderBrush}" 
+                                        BorderThickness="1" 
+                                        CornerRadius="12" 
+                                        Padding="10,4">
+                                    <TextBlock Text="{Binding EntitiesRequiringAttentionCount, StringFormat='{}{0} Issues Pending'}" 
+                                               FontWeight="Bold" 
+                                               FontSize="12" 
+                                               Foreground="{DynamicResource ThemeSuccessGreenBrush}"/>
+                                </Border>
+
+                                <!-- Issues Detected: Warning Red Theme -->
+                                <Border IsVisible="{Binding HasDeadLettersDetected}" 
+                                        Background="{DynamicResource ThemeAlertRedBackgroundBrush}" 
+                                        BorderBrush="{DynamicResource ThemeAlertRedBorderBrush}" 
+                                        BorderThickness="1" 
+                                        CornerRadius="12" 
+                                        Padding="10,4">
+                                    <TextBlock Text="{Binding EntitiesRequiringAttentionCount, StringFormat='{}{0} Issues Pending'}" 
+                                               FontWeight="Bold" 
+                                               FontSize="12" 
+                                               Foreground="{DynamicResource ThemeAlertRedBrush}"/>
+                                </Border>
+                            </Panel>
                         </Grid>
 
                         <!-- If No Issues -->
