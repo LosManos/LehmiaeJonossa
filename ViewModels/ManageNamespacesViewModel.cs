@@ -327,6 +327,30 @@ public partial class ManageNamespacesViewModel : ViewModelBase
         }
     }
 
+    public string ConfigFilePath => _configService.ConfigFilePath;
+
+    [RelayCommand]
+    public void OpenConfigFile()
+    {
+        ErrorMessage = null;
+        try
+        {
+            bool success = _configService.OpenConfigFile();
+            if (success)
+            {
+                StatusMessage = $"Opened configuration file: {ConfigFilePath}";
+            }
+            else
+            {
+                ErrorMessage = $"Could not open configuration file at: {ConfigFilePath}";
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error opening config file: {ex.Message}";
+        }
+    }
+
     [RelayCommand]
     public void Close()
     {

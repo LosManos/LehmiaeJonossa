@@ -53,6 +53,7 @@ public partial class ManageNamespacesWindow : Window
         if (DataContext is not ManageNamespacesViewModel vm) return;
 
         bool isAlt = e.KeyModifiers.HasFlag(KeyModifiers.Alt);
+        bool isCmdOrCtrl = e.KeyModifiers.HasFlag(KeyModifiers.Meta) || e.KeyModifiers.HasFlag(KeyModifiers.Control);
         var focused = FocusManager?.GetFocusedElement() as Visual;
 
         // Escape handling
@@ -117,6 +118,17 @@ public partial class ManageNamespacesWindow : Window
             }
         }
 
+        // Cmd/Ctrl+F shortcut to open config file
+        if (isCmdOrCtrl && focused is not TextBox && e.Key == Key.F)
+        {
+            if (vm.OpenConfigFileCommand.CanExecute(null))
+            {
+                vm.OpenConfigFileCommand.Execute(null);
+                e.Handled = true;
+                return;
+            }
+        }
+
         // Delete / Backspace key: trigger delete when list is focused and NOT inside a textbox
         if ((e.Key == Key.Delete || e.Key == Key.Back) && focused is not TextBox && !vm.IsEditing)
         {
@@ -170,6 +182,15 @@ public partial class ManageNamespacesWindow : Window
                     if (vm.DiscoverNamespacesCommand.CanExecute(null))
                     {
                         vm.DiscoverNamespacesCommand.Execute(null);
+                        e.Handled = true;
+                        return;
+                    }
+                    break;
+
+                case Key.F:
+                    if (vm.OpenConfigFileCommand.CanExecute(null))
+                    {
+                        vm.OpenConfigFileCommand.Execute(null);
                         e.Handled = true;
                         return;
                     }

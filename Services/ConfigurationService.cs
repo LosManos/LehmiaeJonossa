@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
@@ -12,6 +13,7 @@ public class ConfigurationService : IConfigurationService
 {
     private readonly string _configDirectory;
     private readonly string _configFilePath;
+    public string ConfigFilePath => _configFilePath;
     private static readonly JsonSerializerOptions _jsonOptions = new()
     {
         WriteIndented = true,
@@ -123,6 +125,57 @@ public class ConfigurationService : IConfigurationService
         catch (Exception ex)
         {
             Console.WriteLine($"Error saving settings to {_configFilePath}: {ex.Message}");
+        }
+    }
+
+    public bool OpenConfigFile()
+    {
+        try
+        {
+            if (!File.Exists(_configFilePath))
+            {
+                if (!Directory.Exists(_configDirectory))
+                {
+                    Directory.CreateDirectory(_configDirectory);
+                }
+                var defaultSettings = new AppSettings();
+                var json = JsonSerializer.Serialize(defaultSettings, _jsonOptions);
+                File.WriteAllText(_configFilePath, json);
+            }
+
+            if (OperatingSystem.IsWindows())
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = _configFilePath,
+                    UseShellExecute = true
+                });
+                return true;
+            }
+            else if (OperatingSystem.IsMacOS())
+            {
+                Process.Start("open", _configFilePath);
+                return true;
+            }
+            else if (OperatingSystem.IsLinux())
+            {
+                Process.Start("xdg-open", _configFilePath);
+                return true;
+            }
+            else
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = _configFilePath,
+                    UseShellExecute = true
+                });
+                return true;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error opening config file {_configFilePath}: {ex.Message}");
+            return false;
         }
     }
 }

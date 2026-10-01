@@ -172,8 +172,8 @@ public partial class MainWindowViewModel : ViewModelBase
                             !n.Equals("sb-staging.servicebus.windows.net", StringComparison.OrdinalIgnoreCase))
                 .ToList();
 
-            // Auto-discover live Azure Service Bus namespaces if not in demo mode
-            if (!IsDemoMode)
+            // Auto-discover live Azure Service Bus namespaces if not in demo mode and no namespaces configured yet
+            if (!IsDemoMode && cleanConfigured.Count == 0)
             {
                 var discovered = await _monitorService.DiscoverNamespacesAsync();
                 foreach (var ns in discovered)

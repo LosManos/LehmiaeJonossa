@@ -304,4 +304,65 @@ public class ManageNamespacesTests
         Assert.True(vm.NamespaceItems[1].IsActive);
         Assert.Equal("sb-beta", configService.SavedSettings.SelectedNamespace);
     }
+
+    [Fact]
+    public void ManageNamespacesViewModel_OpenConfigFile_InvokesServiceAndSetsStatusMessage()
+    {
+        var namespaces = new ObservableCollection<string> { "sb-alpha" };
+        var configService = new MockConfigurationService
+        {
+            ConfigFilePath = "/custom/test/config.json",
+            OpenConfigFileReturnValue = true
+        };
+        var settings = new AppSettings { ConfiguredNamespaces = namespaces.ToList(), SelectedNamespace = "sb-alpha" };
+        var monitorService = new AzureServiceBusMonitorService();
+
+        var vm = new ManageNamespacesViewModel(
+            namespaces,
+            "sb-alpha",
+            configService,
+            settings,
+            monitorService,
+            true,
+            _ => { }
+        );
+
+        Assert.Equal("/custom/test/config.json", vm.ConfigFilePath);
+
+        vm.OpenConfigFileCommand.Execute(null);
+
+        Assert.True(configService.OpenConfigFileCalled);
+        Assert.NotNull(vm.StatusMessage);
+        Assert.Contains("config.json", vm.StatusMessage);
+        Assert.Null(vm.ErrorMessage);
+    }
+
+    [Fact]
+    public void ManageNamespacesViewModel_OpenConfigFile_SetsErrorMessageOnFailure()
+    {
+        var namespaces = new ObservableCollection<string> { "sb-alpha" };
+        var configService = new MockConfigurationService
+        {
+            ConfigFilePath = "/custom/test/config.json",
+            OpenConfigFileReturnValue = false
+        };
+        var settings = new AppSettings { ConfiguredNamespaces = namespaces.ToList(), SelectedNamespace = "sb-alpha" };
+        var monitorService = new AzureServiceBusMonitorService();
+
+        var vm = new ManageNamespacesViewModel(
+            namespaces,
+            "sb-alpha",
+            configService,
+            settings,
+            monitorService,
+            true,
+            _ => { }
+        );
+
+        vm.OpenConfigFileCommand.Execute(null);
+
+        Assert.True(configService.OpenConfigFileCalled);
+        Assert.NotNull(vm.ErrorMessage);
+        Assert.Contains("Could not open", vm.ErrorMessage);
+    }
 }

@@ -47,7 +47,7 @@
 
     <Grid RowDefinitions="Auto,*,Auto" Margin="24">
         <!-- 1. HEADER -->
-        <Grid Grid.Row="0" ColumnDefinitions="Auto,*" Margin="0,0,0,16">
+        <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Margin="0,0,0,16">
             <Border Grid.Column="0" Width="44" Height="44" 
                     Background="{DynamicResource ThemeHeaderBackgroundBrush}"
                     BorderBrush="{DynamicResource ThemeCardBorderBrush}"
@@ -56,7 +56,7 @@
                     Margin="0,0,14,0">
                 <TextBlock Text="☁️" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center"/>
             </Border>
-            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,12,0">
                 <TextBlock Text="Manage Service Bus Namespaces" 
                            FontSize="18" 
                            FontWeight="Bold" 
@@ -65,6 +65,28 @@
                            FontSize="12" 
                            Foreground="{DynamicResource ThemeTextMutedBrush}"/>
             </StackPanel>
+            <Button Grid.Column="2"
+                    Command="{Binding OpenConfigFileCommand}"
+                    ToolTip.Tip="{Binding ConfigFilePath, StringFormat='Open config file ({0}) (Alt+F)'}"
+                    VerticalAlignment="Center"
+                    Padding="10,6"
+                    CornerRadius="6">
+                <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                    <TextBlock Text="📄" FontSize="12" VerticalAlignment="Center"/>
+                    <TextBlock VerticalAlignment="Center">
+                        <Run>Open Config </Run><Run TextDecorations="Underline">F</Run><Run>ile</Run>
+                    </TextBlock>
+                    <Border IsVisible="{Binding ShowKeyboardHints}"
+                            Background="{DynamicResource ThemeBackgroundBrush}"
+                            BorderBrush="{DynamicResource ThemeCardBorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="3"
+                            Padding="4,1"
+                            Margin="4,0,0,0">
+                        <TextBlock Text="Alt+F" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource ThemeTextSecondaryBrush}"/>
+                    </Border>
+                </StackPanel>
+            </Button>
         </Grid>
 
         <!-- 2. SCROLLABLE CONTENT BODY -->
@@ -387,7 +409,7 @@
             <Grid ColumnDefinitions="*,Auto">
                 <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
                     <TextBlock Text="⌨️" FontSize="12" VerticalAlignment="Center"/>
-                    <TextBlock Text="Shortcuts: ↑/↓: Navigate  •  Enter: Set Active  •  F2 / Alt+E: Edit  •  Del / Alt+R: Remove  •  Esc: Close" 
+                    <TextBlock Text="Shortcuts: ↑/↓: Navigate  •  Enter: Set Active  •  F2 / Alt+E: Edit  •  Del / Alt+R: Remove  •  Alt+F: Config File  •  Esc: Close" 
                                FontSize="11" 
                                Foreground="{DynamicResource ThemeTextMutedBrush}" 
                                VerticalAlignment="Center"/>

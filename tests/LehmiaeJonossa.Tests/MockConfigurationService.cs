@@ -6,7 +6,10 @@ namespace LehmiaeJonossa.Tests;
 
 public class MockConfigurationService : IConfigurationService
 {
+    public string ConfigFilePath { get; set; } = "/mock/path/config.json";
     public AppSettings SavedSettings { get; set; } = new();
+    public bool OpenConfigFileCalled { get; private set; }
+    public bool OpenConfigFileReturnValue { get; set; } = true;
 
     public AppSettings LoadSettings() => SavedSettings;
 
@@ -16,5 +19,11 @@ public class MockConfigurationService : IConfigurationService
     {
         SavedSettings = settings;
         return Task.CompletedTask;
+    }
+
+    public bool OpenConfigFile()
+    {
+        OpenConfigFileCalled = true;
+        return OpenConfigFileReturnValue;
     }
 }
