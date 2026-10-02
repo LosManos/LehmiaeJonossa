@@ -1,8 +1,10 @@
 # LehmiaeJonossa
 
-A high-performance cross-platform desktop monitor built with **.NET 10** and **Avalonia UI** for **macOS** and **Windows**, designed to give cloud and DevOps engineers an instant situational overview of dead-lettered messages in Azure Service Bus.
+## TL;DR
 
-![Dashboard Preview](https://raw.githubusercontent.com/Azure/azure-sdk-for-net/main/sdk/servicebus/Azure.Messaging.ServiceBus/README.md)
+A cross-platform desktop monitor built with **.NET 10** and **Avalonia UI** for **macOS** and **Windows**, designed to give developers an instant situational overview of dead-lettered messages in Azure Service Bus.
+
+![LehmiaeJonossa Logo](Assets/app-icon.png)
 
 ---
 
