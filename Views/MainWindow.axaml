@@ -28,6 +28,21 @@
             <Setter Property="BoxShadow" Value="0 2 8 0 #15000000"/>
         </Style>
 
+        <Style Selector="Button.Link">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="Button.Link:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Opacity" Value="0.8"/>
+        </Style>
+        <Style Selector="Button.Link:pressed /template/ ContentPresenter">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Opacity" Value="0.6"/>
+        </Style>
+
         <Style Selector="Button.ActionPrimary">
             <Setter Property="Background" Value="{DynamicResource ThemeAccentBrush}"/>
             <Setter Property="Foreground" Value="{DynamicResource ThemeAccentForegroundBrush}"/>
@@ -150,9 +165,25 @@
                                    FontSize="17" 
                                    FontWeight="Bold" 
                                    Foreground="{DynamicResource ThemeTextPrimaryBrush}"/>
-                        <TextBlock Text="Azure Service Bus Diagnostic Dashboard" 
-                                   FontSize="11" 
-                                   Foreground="{DynamicResource ThemeTextMutedBrush}"/>
+                        <Button Classes="Link"
+                                Command="{Binding OpenGitHubUrlCommand}"
+                                ToolTip.Tip="Open https://github.com/LosManos/LehmiaeJonossa"
+                                AutomationProperties.Name="Open GitHub repository"
+                                Margin="0,1,0,0">
+                            <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding AppVersionDisplay}" 
+                                           FontSize="11" 
+                                           FontWeight="SemiBold" 
+                                           Foreground="{DynamicResource ThemeTextMutedBrush}"/>
+                                <TextBlock Text="•" 
+                                           FontSize="10" 
+                                           Foreground="{DynamicResource ThemeTextMutedBrush}"/>
+                                <TextBlock Text="https://github.com/LosManos/LehmiaeJonossa" 
+                                           FontSize="11" 
+                                           Foreground="{DynamicResource ThemeAccentBrush}"
+                                           TextDecorations="Underline"/>
+                            </StackPanel>
+                        </Button>
                     </StackPanel>
                 </StackPanel>
 
