@@ -1,0 +1,169 @@
+name: Build/Release
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build (${{ matrix.target }})
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: windows
+          - os: ubuntu-latest
+            target: linux
+          - os: macos-latest
+            target: macos
+
+    steps:
+      - name: Check out git repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore LehmiaeJonossa.slnx
+
+      - name: Run tests
+        run: dotnet test LehmiaeJonossa.slnx --no-restore --configuration Release
+
+      # --- Windows Packaging ---
+      - name: Build & Package Windows (win-x64)
+        if: matrix.target == 'windows'
+        shell: pwsh
+        run: |
+          dotnet publish LehmiaeJonossa.csproj -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish/win-x64
+          New-Item -ItemType Directory -Force -Path dist
+          Compress-Archive -Path publish/win-x64/* -DestinationPath dist/LehmiaeJonossa-windows-x64.zip
+
+      # --- Linux Packaging ---
+      - name: Build & Package Linux (linux-x64)
+        if: matrix.target == 'linux'
+        shell: bash
+        run: |
+          dotnet publish LehmiaeJonossa.csproj -c Release -r linux-x64 --self-contained -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish/linux-x64
+          chmod +x publish/linux-x64/LehmiaeJonossa
+          mkdir -p dist
+          tar -czvf dist/LehmiaeJonossa-linux-x64.tar.gz -C publish/linux-x64 .
+
+      # --- macOS Packaging ---
+      - name: Build & Package macOS (osx-arm64 and osx-x64)
+        if: matrix.target == 'macos'
+        shell: bash
+        run: |
+          mkdir -p dist
+          DIST_DIR="${GITHUB_WORKSPACE:-$PWD}/dist"
+          for ARCH in osx-arm64 osx-x64; do
+            echo "Publishing for $ARCH..."
+            dotnet publish LehmiaeJonossa.csproj -c Release -r $ARCH --self-contained -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o "publish/$ARCH"
+            
+            APP_DIR="dist_app/$ARCH/LehmiaeJonossa.app"
+            mkdir -p "$APP_DIR/Contents/MacOS"
+            mkdir -p "$APP_DIR/Contents/Resources"
+            
+            cp -r "publish/$ARCH/"* "$APP_DIR/Contents/MacOS/"
+            chmod +x "$APP_DIR/Contents/MacOS/LehmiaeJonossa"
+            cp Assets/app-icon.icns "$APP_DIR/Contents/Resources/"
+            cp Assets/Info.plist "$APP_DIR/Contents/Info.plist"
+            
+            ZIP_NAME="LehmiaeJonossa-macos-arm64.zip"
+            if [ "$ARCH" = "osx-x64" ]; then
+              ZIP_NAME="LehmiaeJonossa-macos-x64.zip"
+            fi
+            
+            (cd "dist_app/$ARCH" && zip -q -r -y "$DIST_DIR/$ZIP_NAME" LehmiaeJonossa.app)
+          done
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: binaries-${{ matrix.target }}
+          path: dist/*
+          retention-days: 7
+
+  release:
+    name: Create GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+    permissions:
+      contents: write
+
+    steps:
+      - name: Check out git repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v8
+        with:
+          path: artifacts
+
+      - name: Prepare release assets & version
+        id: prep
+        shell: bash
+        run: |
+          git fetch --tags --force
+
+          mkdir -p release-assets
+          find artifacts -type f \( -name "*.zip" -o -name "*.tar.gz" \) -exec cp {} release-assets/ \;
+          echo "Staged release assets:"
+          ls -la release-assets/
+
+          # Extract version from LehmiaeJonossa.csproj
+          CSPROJ_VERSION=$(sed -n 's/.*<Version>\(.*\)<\/Version>.*/\1/p' LehmiaeJonossa.csproj | tr -d '[:space:]')
+          if [ -z "$CSPROJ_VERSION" ]; then
+            CSPROJ_VERSION="0.1.0"
+          fi
+
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            TAG_NAME="${GITHUB_REF_NAME}"
+            RELEASE_NAME="${GITHUB_REF_NAME}"
+          else
+            # Push to main: check if tag already exists in git
+            if git rev-parse -q --verify "refs/tags/v${CSPROJ_VERSION}" >/dev/null 2>&1; then
+              TAG_NAME="v${CSPROJ_VERSION}.${GITHUB_RUN_NUMBER}"
+              RELEASE_NAME="v${CSPROJ_VERSION}.${GITHUB_RUN_NUMBER}"
+            else
+              TAG_NAME="v${CSPROJ_VERSION}"
+              RELEASE_NAME="v${CSPROJ_VERSION}"
+            fi
+          fi
+
+          echo "TAG_NAME=$TAG_NAME" >> "$GITHUB_OUTPUT"
+          echo "RELEASE_NAME=$RELEASE_NAME" >> "$GITHUB_OUTPUT"
+          echo "Resolved Tag: $TAG_NAME"
+          echo "Resolved Release Name: $RELEASE_NAME"
+
+      - name: Publish Release to GitHub
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.prep.outputs.TAG_NAME }}
+          name: ${{ steps.prep.outputs.RELEASE_NAME }}
+          files: release-assets/*
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

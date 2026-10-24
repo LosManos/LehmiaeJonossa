@@ -116,3 +116,6 @@ artifacts/
 
 # Publish output
 publish/
+dist/
+dist_app/
+release-assets/

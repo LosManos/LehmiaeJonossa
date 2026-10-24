@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Threading;
@@ -638,5 +640,57 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         AutoRefreshCountdownText = $"{_countdownSeconds}s";
+    }
+
+    public string AppVersionDisplay { get; } = GetAppVersionDisplay();
+
+    private static string GetAppVersionDisplay()
+    {
+        var infoVersion = typeof(MainWindowViewModel).Assembly
+            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+            ?.InformationalVersion;
+        if (!string.IsNullOrWhiteSpace(infoVersion))
+        {
+            var plusIndex = infoVersion.IndexOf('+');
+            var ver = plusIndex > 0 ? infoVersion[..plusIndex] : infoVersion;
+            return $"v{ver}";
+        }
+
+        var assemblyVersion = typeof(MainWindowViewModel).Assembly.GetName().Version;
+        if (assemblyVersion != null)
+        {
+            return $"v{assemblyVersion.Major}.{assemblyVersion.Minor}.{assemblyVersion.Build}";
+        }
+
+        return "v0.1.0";
+    }
+
+    [RelayCommand]
+    public void OpenGitHubUrl()
+    {
+        const string url = "https://github.com/LosManos/LehmiaeJonossa";
+        try
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = url,
+                UseShellExecute = true
+            });
+        }
+        catch
+        {
+            if (OperatingSystem.IsWindows())
+            {
+                Process.Start(new ProcessStartInfo("cmd", $"/c start {url.Replace("&", "^&")}") { CreateNoWindow = true });
+            }
+            else if (OperatingSystem.IsMacOS())
+            {
+                Process.Start("open", url);
+            }
+            else if (OperatingSystem.IsLinux())
+            {
+                Process.Start("xdg-open", url);
+            }
+        }
     }
 }

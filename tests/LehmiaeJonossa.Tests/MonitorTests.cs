@@ -669,6 +669,15 @@ public class MonitorTests
             }
         }
     }
+
+    [Fact]
+    public void MainWindowViewModel_AppVersionDisplay_StartsWithVAndContainsSemanticVersion()
+    {
+        var vm = new MainWindowViewModel(new AzureServiceBusMonitorService(), new MockConfigurationService(), new ThemeService());
+        Assert.NotNull(vm.AppVersionDisplay);
+        Assert.StartsWith("v", vm.AppVersionDisplay);
+        Assert.Contains(".", vm.AppVersionDisplay);
+    }
 }
 
 
