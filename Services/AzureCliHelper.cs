@@ -64,6 +64,8 @@ public static class AzureCliHelper
 
     private static async Task<string> RunAzCommandAsync(string arguments, CancellationToken ct)
     {
+        Program.EnsureCliPathsInEnvironment();
+
         using var process = new Process();
         process.StartInfo = new ProcessStartInfo
         {
