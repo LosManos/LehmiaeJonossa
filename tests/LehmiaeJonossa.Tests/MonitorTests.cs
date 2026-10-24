@@ -678,6 +678,35 @@ public class MonitorTests
         Assert.StartsWith("v", vm.AppVersionDisplay);
         Assert.Contains(".", vm.AppVersionDisplay);
     }
+
+    [Fact]
+    public void Program_EnsureCliPathsInEnvironment_AugmentsPathWithoutDuplication()
+    {
+        var originalPath = Environment.GetEnvironmentVariable("PATH");
+        try
+        {
+            Program.EnsureCliPathsInEnvironment();
+            var augmentedPath = Environment.GetEnvironmentVariable("PATH");
+
+            Assert.NotNull(augmentedPath);
+            if (OperatingSystem.IsMacOS())
+            {
+                if (System.IO.Directory.Exists("/opt/homebrew/bin"))
+                {
+                    Assert.Contains("/opt/homebrew/bin", augmentedPath);
+                }
+            }
+
+            // Ensure idempotency: running a second time does not duplicate paths
+            Program.EnsureCliPathsInEnvironment();
+            var secondAugmentedPath = Environment.GetEnvironmentVariable("PATH");
+            Assert.Equal(augmentedPath, secondAugmentedPath);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("PATH", originalPath);
+        }
+    }
 }
 
 
